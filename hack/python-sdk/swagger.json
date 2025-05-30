@@ -7,6 +7,32 @@
   },
   "paths": {},
   "definitions": {
+    "jobset.v1alpha2.AutoScaling": {
+      "type": "object",
+      "required": [
+        "minReplicas",
+        "maxReplicas"
+      ],
+      "properties": {
+        "maxReplicas": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "default": {},
+            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.api.autoscaling.v2.MetricSpec"
+          }
+        },
+        "minReplicas": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
+        }
+      }
+    },
     "jobset.v1alpha2.Coordinator": {
       "description": "Coordinator defines which pod can be marked as the coordinator for the JobSet workload.",
       "type": "object",
@@ -124,7 +150,7 @@
         },
         "metadata": {
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
           "default": {},
@@ -160,7 +186,7 @@
         },
         "metadata": {
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ListMeta"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ListMeta"
         }
       }
     },
@@ -196,6 +222,9 @@
           ],
           "x-kubernetes-list-type": "map"
         },
+        "scale": {
+          "$ref": "#/definitions/jobset.v1alpha2.Scale"
+        },
         "startupPolicy": {
           "description": "StartupPolicy, if set, configures in what order jobs must be started Deprecated: StartupPolicy is deprecated, please use the DependsOn API.",
           "$ref": "#/definitions/jobset.v1alpha2.StartupPolicy"
@@ -223,7 +252,7 @@
           "type": "array",
           "items": {
             "default": {},
-            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Condition"
+            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Condition"
           },
           "x-kubernetes-list-map-keys": [
             "type"
@@ -311,7 +340,7 @@
         "template": {
           "description": "Template defines the template of the Job that will be created.",
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.api.batch.v1.JobTemplateSpec"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.api.batch.v1.JobTemplateSpec"
         }
       }
     },
@@ -361,6 +390,23 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        }
+      }
+    },
+    "jobset.v1alpha2.Scale": {
+      "type": "object",
+      "required": [
+        "replicatedJobName",
+        "autoScaling"
+      ],
+      "properties": {
+        "autoScaling": {
+          "default": {},
+          "$ref": "#/definitions/jobset.v1alpha2.AutoScaling"
+        },
+        "replicatedJobName": {
+          "type": "string",
+          "default": ""
         }
       }
     },

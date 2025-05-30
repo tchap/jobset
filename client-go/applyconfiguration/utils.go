@@ -28,6 +28,8 @@ import (
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
 	// Group=jobset.x-k8s.io, Version=v1alpha2
+	case v1alpha2.SchemeGroupVersion.WithKind("AutoScaling"):
+		return &jobsetv1alpha2.AutoScalingApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("Coordinator"):
 		return &jobsetv1alpha2.CoordinatorApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("DependsOn"):
@@ -48,6 +50,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &jobsetv1alpha2.ReplicatedJobApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ReplicatedJobStatus"):
 		return &jobsetv1alpha2.ReplicatedJobStatusApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("Scale"):
+		return &jobsetv1alpha2.ScaleApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("StartupPolicy"):
 		return &jobsetv1alpha2.StartupPolicyApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("SuccessPolicy"):

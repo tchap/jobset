@@ -96,7 +96,8 @@ const (
 // JobSetSpec defines the desired state of JobSet
 // +kubebuilder:validation:XValidation:rule="!(has(self.startupPolicy) && self.startupPolicy.startupPolicyOrder == 'InOrder' && self.replicatedJobs.exists(x, has(x.dependsOn)))",message="StartupPolicy and DependsOn APIs are mutually exclusive"
 type JobSetSpec struct {
-	Scale Scale `json:"scale"`
+	// +optional
+	Scale *Scale `json:"scale"`
 
 	// ReplicatedJobs is the group of jobs that will form the set.
 	// +listType=map

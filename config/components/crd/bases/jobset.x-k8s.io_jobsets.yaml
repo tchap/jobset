@@ -9501,14 +9501,10 @@ spec:
                     type: object
                     x-kubernetes-validations:
                     - rule: self.minReplicas <= self.maxReplicas
-                  replicas:
-                    format: int32
-                    type: integer
                   replicatedJobName:
                     type: string
                 required:
                 - autoScaling
-                - replicas
                 - replicatedJobName
                 type: object
               startupPolicy:
@@ -9575,8 +9571,6 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
-            required:
-            - scale
             type: object
             x-kubernetes-validations:
             - message: StartupPolicy and DependsOn APIs are mutually exclusive
@@ -9714,4 +9708,7 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        specReplicasPath: .spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJobName)].replicas
+        statusReplicasPath: .status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJobName)].active
       status: {}

@@ -217,6 +217,7 @@ type ReplicatedJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJobName)].replicas,statuspath=.status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJobName)].active
 // +kubebuilder:printcolumn:name="TerminalState",JSONPath=".status.terminalState",type=string,description="Final state of JobSet"
 // +kubebuilder:printcolumn:name="Restarts",JSONPath=".status.restarts",type=string,description="Number of restarts"
 // +kubebuilder:printcolumn:name="Completed",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"Completed\")].status"
@@ -444,7 +445,6 @@ type Coordinator struct {
 
 type Scale struct {
 	ReplicatedJobName string `json:"replicatedJobName"`
-	Replicas          int32  `json:"replicas"`
 
 	// +kubebuilder:validation:XValidation:rule="self.minReplicas <= self.maxReplicas"
 	AutoScaling AutoScaling `json:"autoScaling"`

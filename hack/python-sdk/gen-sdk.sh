@@ -50,13 +50,13 @@ if [[ "$CONTAINER_ENGINE" == podman ]]; then
   volume_opts=":rw,z"
 fi
 
-run_user="$(id -u):$(id -g)"
+user="$(id -u):$(id -g)"
 if [[ "$CONTAINER_ENGINE" == podman ]]; then
-  run_user="root:root"
+  user="root:root"
 fi
 
 # Install the sdk using docker, using the user that is running the container engine so that files can still be removed
-${CONTAINER_ENGINE} run --user "${run_user}" --rm \
+${CONTAINER_ENGINE} run --user "${user}" --rm \
   -v "${repo_root}:/local${volume_opts}" docker.io/openapitools/openapi-generator-cli:v7.11.0 generate \
   -i /local/hack/python-sdk/swagger.json \
   -g python \

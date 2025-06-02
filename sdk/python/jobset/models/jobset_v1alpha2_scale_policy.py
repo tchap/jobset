@@ -81,7 +81,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "replicas": obj.get("replicas") if obj.get("replicas") is not None else 1,
+            "replicas": obj.get("replicas"),
             "replicatedJob": obj.get("replicatedJob") if obj.get("replicatedJob") is not None else ''
         })
         return _obj

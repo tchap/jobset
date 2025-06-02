@@ -9022,7 +9022,6 @@ spec:
               scalePolicy:
                 properties:
                   replicas:
-                    default: 1
                     format: int32
                     type: integer
                   replicatedJob:

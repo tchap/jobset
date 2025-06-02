@@ -649,7 +649,7 @@ func schema_jobset_api_jobset_v1alpha2_Scale(ref common.ReferenceCallback) commo
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"replicatedJobName": {
+					"replicatedJob": {
 						SchemaProps: spec.SchemaProps{
 							Default: "",
 							Type:    []string{"string"},
@@ -657,7 +657,7 @@ func schema_jobset_api_jobset_v1alpha2_Scale(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"replicatedJobName"},
+				Required: []string{"replicatedJob"},
 			},
 		},
 	}

@@ -26,8 +26,8 @@ class JobsetV1alpha2Scale(BaseModel):
     """
     JobsetV1alpha2Scale
     """ # noqa: E501
-    replicated_job_name: StrictStr = Field(alias="replicatedJobName")
-    __properties: ClassVar[List[str]] = ["replicatedJobName"]
+    replicated_job: StrictStr = Field(alias="replicatedJob")
+    __properties: ClassVar[List[str]] = ["replicatedJob"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -80,7 +80,7 @@ class JobsetV1alpha2Scale(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "replicatedJobName": obj.get("replicatedJobName") if obj.get("replicatedJobName") is not None else ''
+            "replicatedJob": obj.get("replicatedJob") if obj.get("replicatedJob") is not None else ''
         })
         return _obj
 

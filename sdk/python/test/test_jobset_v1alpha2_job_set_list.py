@@ -116,7 +116,7 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale = jobset.models.jobset_v1alpha2_scale.JobsetV1alpha2Scale(
-                                replicated_job_name = '', ), 
+                                replicated_job = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 
                             success_policy = jobset.models.jobset_v1alpha2_success_policy.JobsetV1alpha2SuccessPolicy(
@@ -235,7 +235,7 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale = jobset.models.jobset_v1alpha2_scale.JobsetV1alpha2Scale(
-                                replicated_job_name = '', ), 
+                                replicated_job = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 
                             success_policy = jobset.models.jobset_v1alpha2_success_policy.JobsetV1alpha2SuccessPolicy(

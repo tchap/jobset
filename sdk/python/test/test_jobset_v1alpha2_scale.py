@@ -35,11 +35,11 @@ class TestJobsetV1alpha2Scale(unittest.TestCase):
         model = JobsetV1alpha2Scale()
         if include_optional:
             return JobsetV1alpha2Scale(
-                replicated_job_name = ''
+                replicated_job = ''
             )
         else:
             return JobsetV1alpha2Scale(
-                replicated_job_name = '',
+                replicated_job = '',
         )
         """
 

@@ -370,10 +370,10 @@
     "jobset.v1alpha2.Scale": {
       "type": "object",
       "required": [
-        "replicatedJobName"
+        "replicatedJob"
       ],
       "properties": {
-        "replicatedJobName": {
+        "replicatedJob": {
           "type": "string",
           "default": ""
         }

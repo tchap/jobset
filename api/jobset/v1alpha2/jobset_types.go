@@ -444,7 +444,7 @@ type Coordinator struct {
 
 type Scale struct {
 	// +required
-	ReplicatedJobName string `json:"replicatedJobName"`
+	ReplicatedJob string `json:"replicatedJob"`
 }
 
 func init() {

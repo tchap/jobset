@@ -9021,10 +9021,10 @@ spec:
                 x-kubernetes-list-type: map
               scale:
                 properties:
-                  replicatedJobName:
+                  replicatedJob:
                     type: string
                 required:
-                - replicatedJobName
+                - replicatedJob
                 type: object
               startupPolicy:
                 description: |-

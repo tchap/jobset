@@ -216,7 +216,7 @@ type ReplicatedJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJob)].replicas,statuspath=.status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJob)].active
+// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[?(@.name==$["spec"]["scalePolicy"]["replicatedJob"])].replicas,statuspath=.status.replicatedJobsStatus[?(@.name==$["spec"]["scalePolicy"]["replicatedJob"])].active
 // +kubebuilder:printcolumn:name="TerminalState",JSONPath=".status.terminalState",type=string,description="Final state of JobSet"
 // +kubebuilder:printcolumn:name="Restarts",JSONPath=".status.restarts",type=string,description="Number of restarts"
 // +kubebuilder:printcolumn:name="Completed",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"Completed\")].status"

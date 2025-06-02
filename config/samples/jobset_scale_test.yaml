@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/created-by: jobset
   name: sample
 spec:
-  scale:
+  scalePolicy:
     replicatedJob: workers
   replicatedJobs:
     - name: workers

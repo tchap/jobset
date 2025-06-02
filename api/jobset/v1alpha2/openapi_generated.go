@@ -666,12 +666,13 @@ func schema_jobset_api_jobset_v1alpha2_ScalePolicy(ref common.ReferenceCallback)
 					},
 					"replicas": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 1,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 				},
-				Required: []string{"replicatedJob", "replicas"},
+				Required: []string{"replicatedJob"},
 			},
 		},
 	}

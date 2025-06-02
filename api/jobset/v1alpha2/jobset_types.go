@@ -447,7 +447,9 @@ type Coordinator struct {
 type ScalePolicy struct {
 	// +required
 	ReplicatedJob string `json:"replicatedJob"`
-	Replicas      *int32 `json:"replicas"`
+
+	// +default=1
+	Replicas int32 `json:"replicas,omitempty"`
 }
 
 type ScaleStatus struct {

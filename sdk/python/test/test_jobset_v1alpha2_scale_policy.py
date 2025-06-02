@@ -40,7 +40,6 @@ class TestJobsetV1alpha2ScalePolicy(unittest.TestCase):
             )
         else:
             return JobsetV1alpha2ScalePolicy(
-                replicas = 56,
                 replicated_job = '',
         )
         """

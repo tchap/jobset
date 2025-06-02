@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List
+from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -26,7 +26,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
     """
     JobsetV1alpha2ScalePolicy
     """ # noqa: E501
-    replicas: StrictInt
+    replicas: Optional[StrictInt] = 1
     replicated_job: StrictStr = Field(alias="replicatedJob")
     __properties: ClassVar[List[str]] = ["replicas", "replicatedJob"]
 
@@ -81,7 +81,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "replicas": obj.get("replicas"),
+            "replicas": obj.get("replicas") if obj.get("replicas") is not None else 1,
             "replicatedJob": obj.get("replicatedJob") if obj.get("replicatedJob") is not None else ''
         })
         return _obj

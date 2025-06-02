@@ -377,13 +377,13 @@
     "jobset.v1alpha2.ScalePolicy": {
       "type": "object",
       "required": [
-        "replicatedJob",
-        "replicas"
+        "replicatedJob"
       ],
       "properties": {
         "replicas": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "default": 1
         },
         "replicatedJob": {
           "type": "string",

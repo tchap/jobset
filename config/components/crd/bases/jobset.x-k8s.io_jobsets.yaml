@@ -9228,6 +9228,6 @@ spec:
     storage: true
     subresources:
       scale:
-        specReplicasPath: .spec.replicatedJobs[?(@.name=="workers"].replicas
-        statusReplicasPath: .status.replicatedJobsStatus[?(@.name=="workers")].active
+        specReplicasPath: .spec.replicatedJobs[0].replicas
+        statusReplicasPath: .status.replicatedJobsStatus[0].active
       status: {}

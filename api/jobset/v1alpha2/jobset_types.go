@@ -449,7 +449,7 @@ type ScalePolicy struct {
 	ReplicatedJob string `json:"replicatedJob"`
 
 	// +default=1
-	Replicas int32 `json:"replicas"`
+	Replicas *int32 `json:"replicas"`
 }
 
 type ScaleStatus struct {

@@ -17,18 +17,17 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictInt
 from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class JobsetV1alpha2ScalePolicy(BaseModel):
+class JobsetV1alpha2ScaleStatus(BaseModel):
     """
-    JobsetV1alpha2ScalePolicy
+    JobsetV1alpha2ScaleStatus
     """ # noqa: E501
     replicas: StrictInt
-    replicated_job: StrictStr = Field(alias="replicatedJob")
-    __properties: ClassVar[List[str]] = ["replicas", "replicatedJob"]
+    __properties: ClassVar[List[str]] = ["replicas"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -48,7 +47,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of JobsetV1alpha2ScalePolicy from a JSON string"""
+        """Create an instance of JobsetV1alpha2ScaleStatus from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,7 +72,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of JobsetV1alpha2ScalePolicy from a dict"""
+        """Create an instance of JobsetV1alpha2ScaleStatus from a dict"""
         if obj is None:
             return None
 
@@ -81,8 +80,7 @@ class JobsetV1alpha2ScalePolicy(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "replicas": obj.get("replicas") if obj.get("replicas") is not None else 1,
-            "replicatedJob": obj.get("replicatedJob") if obj.get("replicatedJob") is not None else ''
+            "replicas": obj.get("replicas") if obj.get("replicas") is not None else 0
         })
         return _obj
 

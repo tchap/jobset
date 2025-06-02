@@ -116,6 +116,7 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale_policy = jobset.models.jobset_v1alpha2_scale_policy.JobsetV1alpha2ScalePolicy(
+                                replicas = 56, 
                                 replicated_job = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 
@@ -144,6 +145,8 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                 ], 
                             restarts = 56, 
                             restarts_count_towards_max = 56, 
+                            scale = jobset.models.jobset_v1alpha2_scale_status.JobsetV1alpha2ScaleStatus(
+                                replicas = 56, ), 
                             terminal_state = '', ), )
                     ],
                 kind = '',
@@ -235,6 +238,7 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale_policy = jobset.models.jobset_v1alpha2_scale_policy.JobsetV1alpha2ScalePolicy(
+                                replicas = 56, 
                                 replicated_job = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 
@@ -263,6 +267,8 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                 ], 
                             restarts = 56, 
                             restarts_count_towards_max = 56, 
+                            scale = jobset.models.jobset_v1alpha2_scale_status.JobsetV1alpha2ScaleStatus(
+                                replicas = 56, ), 
                             terminal_state = '', ), )
                     ],
         )

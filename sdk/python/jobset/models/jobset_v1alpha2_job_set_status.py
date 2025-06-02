@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from jobset.models.io_k8s_apimachinery_pkg_apis_meta_v1_condition import IoK8sApimachineryPkgApisMetaV1Condition
 from jobset.models.jobset_v1alpha2_replicated_job_status import JobsetV1alpha2ReplicatedJobStatus
+from jobset.models.jobset_v1alpha2_scale_status import JobsetV1alpha2ScaleStatus
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -32,8 +33,9 @@ class JobsetV1alpha2JobSetStatus(BaseModel):
     replicated_jobs_status: Optional[List[JobsetV1alpha2ReplicatedJobStatus]] = Field(default=None, description="ReplicatedJobsStatus track the number of JobsReady for each replicatedJob.", alias="replicatedJobsStatus")
     restarts: Optional[StrictInt] = Field(default=None, description="Restarts tracks the number of times the JobSet has restarted (i.e. recreated in case of RecreateAll policy).")
     restarts_count_towards_max: Optional[StrictInt] = Field(default=None, description="RestartsCountTowardsMax tracks the number of times the JobSet has restarted that counts towards the maximum allowed number of restarts.", alias="restartsCountTowardsMax")
+    scale: JobsetV1alpha2ScaleStatus
     terminal_state: Optional[StrictStr] = Field(default=None, description="TerminalState the state of the JobSet when it finishes execution. It can be either Completed or Failed. Otherwise, it is empty by default.", alias="terminalState")
-    __properties: ClassVar[List[str]] = ["conditions", "replicatedJobsStatus", "restarts", "restartsCountTowardsMax", "terminalState"]
+    __properties: ClassVar[List[str]] = ["conditions", "replicatedJobsStatus", "restarts", "restartsCountTowardsMax", "scale", "terminalState"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -88,6 +90,9 @@ class JobsetV1alpha2JobSetStatus(BaseModel):
                 if _item_replicated_jobs_status:
                     _items.append(_item_replicated_jobs_status.to_dict())
             _dict['replicatedJobsStatus'] = _items
+        # override the default output from pydantic by calling `to_dict()` of scale
+        if self.scale:
+            _dict['scale'] = self.scale.to_dict()
         return _dict
 
     @classmethod
@@ -104,6 +109,7 @@ class JobsetV1alpha2JobSetStatus(BaseModel):
             "replicatedJobsStatus": [JobsetV1alpha2ReplicatedJobStatus.from_dict(_item) for _item in obj["replicatedJobsStatus"]] if obj.get("replicatedJobsStatus") is not None else None,
             "restarts": obj.get("restarts"),
             "restartsCountTowardsMax": obj.get("restartsCountTowardsMax"),
+            "scale": JobsetV1alpha2ScaleStatus.from_dict(obj["scale"]) if obj.get("scale") is not None else None,
             "terminalState": obj.get("terminalState")
         })
         return _obj

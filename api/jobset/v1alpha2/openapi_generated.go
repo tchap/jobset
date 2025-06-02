@@ -36,6 +36,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"sigs.k8s.io/jobset/api/jobset/v1alpha2.ReplicatedJob":       schema_jobset_api_jobset_v1alpha2_ReplicatedJob(ref),
 		"sigs.k8s.io/jobset/api/jobset/v1alpha2.ReplicatedJobStatus": schema_jobset_api_jobset_v1alpha2_ReplicatedJobStatus(ref),
 		"sigs.k8s.io/jobset/api/jobset/v1alpha2.ScalePolicy":         schema_jobset_api_jobset_v1alpha2_ScalePolicy(ref),
+		"sigs.k8s.io/jobset/api/jobset/v1alpha2.ScaleStatus":         schema_jobset_api_jobset_v1alpha2_ScaleStatus(ref),
 		"sigs.k8s.io/jobset/api/jobset/v1alpha2.StartupPolicy":       schema_jobset_api_jobset_v1alpha2_StartupPolicy(ref),
 		"sigs.k8s.io/jobset/api/jobset/v1alpha2.SuccessPolicy":       schema_jobset_api_jobset_v1alpha2_SuccessPolicy(ref),
 	}
@@ -474,11 +475,18 @@ func schema_jobset_api_jobset_v1alpha2_JobSetStatus(ref common.ReferenceCallback
 							},
 						},
 					},
+					"scale": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("sigs.k8s.io/jobset/api/jobset/v1alpha2.ScaleStatus"),
+						},
+					},
 				},
+				Required: []string{"scale"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition", "sigs.k8s.io/jobset/api/jobset/v1alpha2.ReplicatedJobStatus"},
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Condition", "sigs.k8s.io/jobset/api/jobset/v1alpha2.ReplicatedJobStatus", "sigs.k8s.io/jobset/api/jobset/v1alpha2.ScaleStatus"},
 	}
 }
 
@@ -656,8 +664,35 @@ func schema_jobset_api_jobset_v1alpha2_ScalePolicy(ref common.ReferenceCallback)
 							Format:  "",
 						},
 					},
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Default: 1,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
 				},
-				Required: []string{"replicatedJob"},
+				Required: []string{"replicatedJob", "replicas"},
+			},
+		},
+	}
+}
+
+func schema_jobset_api_jobset_v1alpha2_ScaleStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"replicas": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+				},
+				Required: []string{"replicas"},
 			},
 		},
 	}

@@ -26,6 +26,7 @@ type JobSetStatusApplyConfiguration struct {
 	RestartsCountTowardsMax *int32                                  `json:"restartsCountTowardsMax,omitempty"`
 	TerminalState           *string                                 `json:"terminalState,omitempty"`
 	ReplicatedJobsStatus    []ReplicatedJobStatusApplyConfiguration `json:"replicatedJobsStatus,omitempty"`
+	Scale                   *ScaleStatusApplyConfiguration          `json:"scale,omitempty"`
 }
 
 // JobSetStatusApplyConfiguration constructs a declarative configuration of the JobSetStatus type for use with
@@ -81,5 +82,13 @@ func (b *JobSetStatusApplyConfiguration) WithReplicatedJobsStatus(values ...*Rep
 		}
 		b.ReplicatedJobsStatus = append(b.ReplicatedJobsStatus, *values[i])
 	}
+	return b
+}
+
+// WithScale sets the Scale field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Scale field is set to the value of the last call.
+func (b *JobSetStatusApplyConfiguration) WithScale(value *ScaleStatusApplyConfiguration) *JobSetStatusApplyConfiguration {
+	b.Scale = value
 	return b
 }

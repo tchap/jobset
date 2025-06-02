@@ -221,6 +221,9 @@
     "jobset.v1alpha2.JobSetStatus": {
       "description": "JobSetStatus defines the observed state of JobSet",
       "type": "object",
+      "required": [
+        "scale"
+      ],
       "properties": {
         "conditions": {
           "type": "array",
@@ -254,6 +257,10 @@
           "description": "RestartsCountTowardsMax tracks the number of times the JobSet has restarted that counts towards the maximum allowed number of restarts.",
           "type": "integer",
           "format": "int32"
+        },
+        "scale": {
+          "default": {},
+          "$ref": "#/definitions/jobset.v1alpha2.ScaleStatus"
         },
         "terminalState": {
           "description": "TerminalState the state of the JobSet when it finishes execution. It can be either Completed or Failed. Otherwise, it is empty by default.",
@@ -370,12 +377,31 @@
     "jobset.v1alpha2.ScalePolicy": {
       "type": "object",
       "required": [
-        "replicatedJob"
+        "replicatedJob",
+        "replicas"
       ],
       "properties": {
+        "replicas": {
+          "type": "integer",
+          "format": "int32",
+          "default": 1
+        },
         "replicatedJob": {
           "type": "string",
           "default": ""
+        }
+      }
+    },
+    "jobset.v1alpha2.ScaleStatus": {
+      "type": "object",
+      "required": [
+        "replicas"
+      ],
+      "properties": {
+        "replicas": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0
         }
       }
     },

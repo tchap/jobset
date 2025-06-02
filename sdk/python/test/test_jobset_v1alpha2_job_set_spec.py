@@ -155,6 +155,7 @@ class TestJobsetV1alpha2JobSetSpec(unittest.TestCase):
                                 ttl_seconds_after_finished = 56, ), ), )
                     ],
                 scale_policy = jobset.models.jobset_v1alpha2_scale_policy.JobsetV1alpha2ScalePolicy(
+                    replicas = 56, 
                     replicated_job = '', ),
                 startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                     startup_policy_order = '', ),

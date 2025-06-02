@@ -18,6 +18,7 @@ package v1alpha2
 // with apply.
 type ScalePolicyApplyConfiguration struct {
 	ReplicatedJob *string `json:"replicatedJob,omitempty"`
+	Replicas      *int32  `json:"replicas,omitempty"`
 }
 
 // ScalePolicyApplyConfiguration constructs a declarative configuration of the ScalePolicy type for use with
@@ -31,5 +32,13 @@ func ScalePolicy() *ScalePolicyApplyConfiguration {
 // If called multiple times, the ReplicatedJob field is set to the value of the last call.
 func (b *ScalePolicyApplyConfiguration) WithReplicatedJob(value string) *ScalePolicyApplyConfiguration {
 	b.ReplicatedJob = &value
+	return b
+}
+
+// WithReplicas sets the Replicas field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Replicas field is set to the value of the last call.
+func (b *ScalePolicyApplyConfiguration) WithReplicas(value int32) *ScalePolicyApplyConfiguration {
+	b.Replicas = &value
 	return b
 }

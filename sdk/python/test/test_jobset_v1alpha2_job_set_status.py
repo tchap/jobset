@@ -55,10 +55,14 @@ class TestJobsetV1alpha2JobSetStatus(unittest.TestCase):
                     ],
                 restarts = 56,
                 restarts_count_towards_max = 56,
+                scale = jobset.models.jobset_v1alpha2_scale_status.JobsetV1alpha2ScaleStatus(
+                    replicas = 56, ),
                 terminal_state = ''
             )
         else:
             return JobsetV1alpha2JobSetStatus(
+                scale = jobset.models.jobset_v1alpha2_scale_status.JobsetV1alpha2ScaleStatus(
+                    replicas = 56, ),
         )
         """
 

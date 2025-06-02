@@ -186,6 +186,8 @@ type JobSetStatus struct {
 	// +listType=map
 	// +listMapKey=name
 	ReplicatedJobsStatus []ReplicatedJobStatus `json:"replicatedJobsStatus,omitempty"`
+
+	Scale ScaleStatus `json:"scale"`
 }
 
 // ReplicatedJobStatus defines the observed ReplicatedJobs Readiness.
@@ -216,7 +218,7 @@ type ReplicatedJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[0].replicas,statuspath=.status.replicatedJobsStatus[0].active
+// +kubebuilder:subresource:scale:specpath=.spec.scalePolicy.replicas,statuspath=.status.scale.replicas
 // +kubebuilder:printcolumn:name="TerminalState",JSONPath=".status.terminalState",type=string,description="Final state of JobSet"
 // +kubebuilder:printcolumn:name="Restarts",JSONPath=".status.restarts",type=string,description="Number of restarts"
 // +kubebuilder:printcolumn:name="Completed",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"Completed\")].status"
@@ -445,6 +447,13 @@ type Coordinator struct {
 type ScalePolicy struct {
 	// +required
 	ReplicatedJob string `json:"replicatedJob"`
+
+	// +default=1
+	Replicas int32 `json:"replicas"`
+}
+
+type ScaleStatus struct {
+	Replicas int32 `json:"replicas"`
 }
 
 func init() {

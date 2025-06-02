@@ -1,0 +1,25 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  labels:
+    app.kubernetes.io/name: jobset
+    app.kubernetes.io/instance: jobset-sample
+    app.kubernetes.io/part-of: jobset
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: jobset
+  name: sample
+spec:
+  scale:
+    replicatedJob: workers
+  replicatedJobs:
+    - name: workers
+      template:
+        spec:
+          parallelism: 3
+          completions: 3
+          backoffLimit: 0
+          template:
+            spec:
+              containers:
+                - name: sleep
+                  image: rebelthor/sleep:latest

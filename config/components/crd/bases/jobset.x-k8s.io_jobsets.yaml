@@ -9019,7 +9019,7 @@ spec:
                 x-kubernetes-list-map-keys:
                 - name
                 x-kubernetes-list-type: map
-              scale:
+              scalePolicy:
                 properties:
                   replicatedJob:
                     type: string
@@ -9228,6 +9228,6 @@ spec:
     storage: true
     subresources:
       scale:
-        specReplicasPath: .spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJobName)].replicas
-        statusReplicasPath: .status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJobName)].active
+        specReplicasPath: .spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJob)].replicas
+        statusReplicasPath: .status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJob)].active
       status: {}

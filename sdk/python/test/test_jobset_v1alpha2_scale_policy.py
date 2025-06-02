@@ -14,10 +14,10 @@
 
 import unittest
 
-from jobset.models.jobset_v1alpha2_scale import JobsetV1alpha2Scale
+from jobset.models.jobset_v1alpha2_scale_policy import JobsetV1alpha2ScalePolicy
 
-class TestJobsetV1alpha2Scale(unittest.TestCase):
-    """JobsetV1alpha2Scale unit test stubs"""
+class TestJobsetV1alpha2ScalePolicy(unittest.TestCase):
+    """JobsetV1alpha2ScalePolicy unit test stubs"""
 
     def setUp(self):
         pass
@@ -25,26 +25,26 @@ class TestJobsetV1alpha2Scale(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> JobsetV1alpha2Scale:
-        """Test JobsetV1alpha2Scale
+    def make_instance(self, include_optional) -> JobsetV1alpha2ScalePolicy:
+        """Test JobsetV1alpha2ScalePolicy
             include_optional is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        # uncomment below to create an instance of `JobsetV1alpha2Scale`
+        # uncomment below to create an instance of `JobsetV1alpha2ScalePolicy`
         """
-        model = JobsetV1alpha2Scale()
+        model = JobsetV1alpha2ScalePolicy()
         if include_optional:
-            return JobsetV1alpha2Scale(
+            return JobsetV1alpha2ScalePolicy(
                 replicated_job = ''
             )
         else:
-            return JobsetV1alpha2Scale(
+            return JobsetV1alpha2ScalePolicy(
                 replicated_job = '',
         )
         """
 
-    def testJobsetV1alpha2Scale(self):
-        """Test JobsetV1alpha2Scale"""
+    def testJobsetV1alpha2ScalePolicy(self):
+        """Test JobsetV1alpha2ScalePolicy"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

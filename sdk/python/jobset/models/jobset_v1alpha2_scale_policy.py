@@ -22,9 +22,9 @@ from typing import Any, ClassVar, Dict, List
 from typing import Optional, Set
 from typing_extensions import Self
 
-class JobsetV1alpha2Scale(BaseModel):
+class JobsetV1alpha2ScalePolicy(BaseModel):
     """
-    JobsetV1alpha2Scale
+    JobsetV1alpha2ScalePolicy
     """ # noqa: E501
     replicated_job: StrictStr = Field(alias="replicatedJob")
     __properties: ClassVar[List[str]] = ["replicatedJob"]
@@ -47,7 +47,7 @@ class JobsetV1alpha2Scale(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of JobsetV1alpha2Scale from a JSON string"""
+        """Create an instance of JobsetV1alpha2ScalePolicy from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -72,7 +72,7 @@ class JobsetV1alpha2Scale(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of JobsetV1alpha2Scale from a dict"""
+        """Create an instance of JobsetV1alpha2ScalePolicy from a dict"""
         if obj is None:
             return None
 

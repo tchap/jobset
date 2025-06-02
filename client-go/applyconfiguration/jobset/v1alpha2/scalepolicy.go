@@ -14,22 +14,22 @@ limitations under the License.
 
 package v1alpha2
 
-// ScaleApplyConfiguration represents a declarative configuration of the Scale type for use
+// ScalePolicyApplyConfiguration represents a declarative configuration of the ScalePolicy type for use
 // with apply.
-type ScaleApplyConfiguration struct {
+type ScalePolicyApplyConfiguration struct {
 	ReplicatedJob *string `json:"replicatedJob,omitempty"`
 }
 
-// ScaleApplyConfiguration constructs a declarative configuration of the Scale type for use with
+// ScalePolicyApplyConfiguration constructs a declarative configuration of the ScalePolicy type for use with
 // apply.
-func Scale() *ScaleApplyConfiguration {
-	return &ScaleApplyConfiguration{}
+func ScalePolicy() *ScalePolicyApplyConfiguration {
+	return &ScalePolicyApplyConfiguration{}
 }
 
 // WithReplicatedJob sets the ReplicatedJob field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ReplicatedJob field is set to the value of the last call.
-func (b *ScaleApplyConfiguration) WithReplicatedJob(value string) *ScaleApplyConfiguration {
+func (b *ScalePolicyApplyConfiguration) WithReplicatedJob(value string) *ScalePolicyApplyConfiguration {
 	b.ReplicatedJob = &value
 	return b
 }

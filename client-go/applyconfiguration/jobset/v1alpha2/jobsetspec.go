@@ -17,7 +17,7 @@ package v1alpha2
 // JobSetSpecApplyConfiguration represents a declarative configuration of the JobSetSpec type for use
 // with apply.
 type JobSetSpecApplyConfiguration struct {
-	Scale                   *ScaleApplyConfiguration          `json:"scale,omitempty"`
+	ScalePolicy             *ScalePolicyApplyConfiguration    `json:"scalePolicy,omitempty"`
 	ReplicatedJobs          []ReplicatedJobApplyConfiguration `json:"replicatedJobs,omitempty"`
 	Network                 *NetworkApplyConfiguration        `json:"network,omitempty"`
 	SuccessPolicy           *SuccessPolicyApplyConfiguration  `json:"successPolicy,omitempty"`
@@ -35,11 +35,11 @@ func JobSetSpec() *JobSetSpecApplyConfiguration {
 	return &JobSetSpecApplyConfiguration{}
 }
 
-// WithScale sets the Scale field in the declarative configuration to the given value
+// WithScalePolicy sets the ScalePolicy field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Scale field is set to the value of the last call.
-func (b *JobSetSpecApplyConfiguration) WithScale(value *ScaleApplyConfiguration) *JobSetSpecApplyConfiguration {
-	b.Scale = value
+// If called multiple times, the ScalePolicy field is set to the value of the last call.
+func (b *JobSetSpecApplyConfiguration) WithScalePolicy(value *ScalePolicyApplyConfiguration) *JobSetSpecApplyConfiguration {
+	b.ScalePolicy = value
 	return b
 }
 

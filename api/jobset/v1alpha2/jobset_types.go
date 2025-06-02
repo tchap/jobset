@@ -96,7 +96,7 @@ const (
 // +kubebuilder:validation:XValidation:rule="!(has(self.startupPolicy) && self.startupPolicy.startupPolicyOrder == 'InOrder' && self.replicatedJobs.exists(x, has(x.dependsOn)))",message="StartupPolicy and DependsOn APIs are mutually exclusive"
 type JobSetSpec struct {
 	// +optional
-	Scale *Scale `json:"scale,omitempty"`
+	ScalePolicy *ScalePolicy `json:"scalePolicy,omitempty"`
 
 	// ReplicatedJobs is the group of jobs that will form the set.
 	// +listType=map
@@ -216,7 +216,7 @@ type ReplicatedJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJobName)].replicas,statuspath=.status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJobName)].active
+// +kubebuilder:subresource:scale:specpath=.spec.replicatedJobs[?(@.name==.spec.scalePolicy.replicatedJob)].replicas,statuspath=.status.replicatedJobsStatus[?(@.name==.spec.scalePolicy.replicatedJob)].active
 // +kubebuilder:printcolumn:name="TerminalState",JSONPath=".status.terminalState",type=string,description="Final state of JobSet"
 // +kubebuilder:printcolumn:name="Restarts",JSONPath=".status.restarts",type=string,description="Number of restarts"
 // +kubebuilder:printcolumn:name="Completed",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"Completed\")].status"
@@ -442,7 +442,7 @@ type Coordinator struct {
 	PodIndex int `json:"podIndex,omitempty"`
 }
 
-type Scale struct {
+type ScalePolicy struct {
 	// +required
 	ReplicatedJob string `json:"replicatedJob"`
 }

@@ -196,8 +196,8 @@
           ],
           "x-kubernetes-list-type": "map"
         },
-        "scale": {
-          "$ref": "#/definitions/jobset.v1alpha2.Scale"
+        "scalePolicy": {
+          "$ref": "#/definitions/jobset.v1alpha2.ScalePolicy"
         },
         "startupPolicy": {
           "description": "StartupPolicy, if set, configures in what order jobs must be started Deprecated: StartupPolicy is deprecated, please use the DependsOn API.",
@@ -367,7 +367,7 @@
         }
       }
     },
-    "jobset.v1alpha2.Scale": {
+    "jobset.v1alpha2.ScalePolicy": {
       "type": "object",
       "required": [
         "replicatedJob"

@@ -15,7 +15,6 @@ limitations under the License.
 package v1alpha2
 
 import (
-	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -97,7 +96,7 @@ const (
 // +kubebuilder:validation:XValidation:rule="!(has(self.startupPolicy) && self.startupPolicy.startupPolicyOrder == 'InOrder' && self.replicatedJobs.exists(x, has(x.dependsOn)))",message="StartupPolicy and DependsOn APIs are mutually exclusive"
 type JobSetSpec struct {
 	// +optional
-	Scale *Scale `json:"scale"`
+	Scale *Scale `json:"scale,omitempty"`
 
 	// ReplicatedJobs is the group of jobs that will form the set.
 	// +listType=map
@@ -445,20 +444,6 @@ type Coordinator struct {
 
 type Scale struct {
 	ReplicatedJobName string `json:"replicatedJobName"`
-
-	// +kubebuilder:validation:XValidation:rule="self.minReplicas <= self.maxReplicas"
-	AutoScaling AutoScaling `json:"autoScaling"`
-}
-
-type AutoScaling struct {
-	// +kubebuilder:validation:Minimum=0
-	MinReplicas int32 `json:"minReplicas"`
-
-	// +kubebuilder:validation:Minimum=0
-	MaxReplicas int32 `json:"maxReplicas"`
-
-	// +optional
-	Metrics []autoscalingv2.MetricSpec `json:"metrics,omitempty"`
 }
 
 func init() {

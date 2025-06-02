@@ -19,7 +19,6 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
-from jobset.models.jobset_v1alpha2_auto_scaling import JobsetV1alpha2AutoScaling
 from typing import Optional, Set
 from typing_extensions import Self
 
@@ -27,9 +26,8 @@ class JobsetV1alpha2Scale(BaseModel):
     """
     JobsetV1alpha2Scale
     """ # noqa: E501
-    auto_scaling: JobsetV1alpha2AutoScaling = Field(alias="autoScaling")
     replicated_job_name: StrictStr = Field(alias="replicatedJobName")
-    __properties: ClassVar[List[str]] = ["autoScaling", "replicatedJobName"]
+    __properties: ClassVar[List[str]] = ["replicatedJobName"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -70,9 +68,6 @@ class JobsetV1alpha2Scale(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of auto_scaling
-        if self.auto_scaling:
-            _dict['autoScaling'] = self.auto_scaling.to_dict()
         return _dict
 
     @classmethod
@@ -85,7 +80,6 @@ class JobsetV1alpha2Scale(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "autoScaling": JobsetV1alpha2AutoScaling.from_dict(obj["autoScaling"]) if obj.get("autoScaling") is not None else None,
             "replicatedJobName": obj.get("replicatedJobName") if obj.get("replicatedJobName") is not None else ''
         })
         return _obj

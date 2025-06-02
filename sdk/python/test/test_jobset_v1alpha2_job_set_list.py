@@ -116,53 +116,6 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale = jobset.models.jobset_v1alpha2_scale.JobsetV1alpha2Scale(
-                                auto_scaling = jobset.models.jobset_v1alpha2_auto_scaling.JobsetV1alpha2AutoScaling(
-                                    max_replicas = 56, 
-                                    metrics = [
-                                        jobset.models.io/k8s/api/autoscaling/v2/metric_spec.io.k8s.api.autoscaling.v2.MetricSpec(
-                                            container_resource = jobset.models.io/k8s/api/autoscaling/v2/container_resource_metric_source.io.k8s.api.autoscaling.v2.ContainerResourceMetricSource(
-                                                container = '', 
-                                                name = '', 
-                                                target = jobset.models.io/k8s/api/autoscaling/v2/metric_target.io.k8s.api.autoscaling.v2.MetricTarget(
-                                                    average_utilization = 56, 
-                                                    average_value = '', 
-                                                    type = '', 
-                                                    value = '', ), ), 
-                                            external = jobset.models.io/k8s/api/autoscaling/v2/external_metric_source.io.k8s.api.autoscaling.v2.ExternalMetricSource(
-                                                metric = jobset.models.io/k8s/api/autoscaling/v2/metric_identifier.io.k8s.api.autoscaling.v2.MetricIdentifier(
-                                                    name = '', 
-                                                    selector = jobset.models.io/k8s/apimachinery/pkg/apis/meta/v1/label_selector.io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector(
-                                                        match_expressions = [
-                                                            jobset.models.io/k8s/apimachinery/pkg/apis/meta/v1/label_selector_requirement.io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement(
-                                                                key = '', 
-                                                                operator = '', 
-                                                                values = [
-                                                                    ''
-                                                                    ], )
-                                                            ], 
-                                                        match_labels = {
-                                                            'key' : ''
-                                                            }, ), ), 
-                                                target = jobset.models.io/k8s/api/autoscaling/v2/metric_target.io.k8s.api.autoscaling.v2.MetricTarget(
-                                                    average_utilization = 56, 
-                                                    type = '', ), ), 
-                                            object = jobset.models.io/k8s/api/autoscaling/v2/object_metric_source.io.k8s.api.autoscaling.v2.ObjectMetricSource(
-                                                described_object = jobset.models.io/k8s/api/autoscaling/v2/cross_version_object_reference.io.k8s.api.autoscaling.v2.CrossVersionObjectReference(
-                                                    api_version = '', 
-                                                    kind = '', 
-                                                    name = '', ), 
-                                                metric = jobset.models.io/k8s/api/autoscaling/v2/metric_identifier.io.k8s.api.autoscaling.v2.MetricIdentifier(
-                                                    name = '', ), 
-                                                target = , ), 
-                                            pods = jobset.models.io/k8s/api/autoscaling/v2/pods_metric_source.io.k8s.api.autoscaling.v2.PodsMetricSource(
-                                                metric = , 
-                                                target = , ), 
-                                            resource = jobset.models.io/k8s/api/autoscaling/v2/resource_metric_source.io.k8s.api.autoscaling.v2.ResourceMetricSource(
-                                                name = '', 
-                                                target = , ), 
-                                            type = '', )
-                                        ], 
-                                    min_replicas = 56, ), 
                                 replicated_job_name = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 
@@ -282,53 +235,6 @@ class TestJobsetV1alpha2JobSetList(unittest.TestCase):
                                     template = jobset.models.io/k8s/api/batch/v1/job_template_spec.io.k8s.api.batch.v1.JobTemplateSpec(), )
                                 ], 
                             scale = jobset.models.jobset_v1alpha2_scale.JobsetV1alpha2Scale(
-                                auto_scaling = jobset.models.jobset_v1alpha2_auto_scaling.JobsetV1alpha2AutoScaling(
-                                    max_replicas = 56, 
-                                    metrics = [
-                                        jobset.models.io/k8s/api/autoscaling/v2/metric_spec.io.k8s.api.autoscaling.v2.MetricSpec(
-                                            container_resource = jobset.models.io/k8s/api/autoscaling/v2/container_resource_metric_source.io.k8s.api.autoscaling.v2.ContainerResourceMetricSource(
-                                                container = '', 
-                                                name = '', 
-                                                target = jobset.models.io/k8s/api/autoscaling/v2/metric_target.io.k8s.api.autoscaling.v2.MetricTarget(
-                                                    average_utilization = 56, 
-                                                    average_value = '', 
-                                                    type = '', 
-                                                    value = '', ), ), 
-                                            external = jobset.models.io/k8s/api/autoscaling/v2/external_metric_source.io.k8s.api.autoscaling.v2.ExternalMetricSource(
-                                                metric = jobset.models.io/k8s/api/autoscaling/v2/metric_identifier.io.k8s.api.autoscaling.v2.MetricIdentifier(
-                                                    name = '', 
-                                                    selector = jobset.models.io/k8s/apimachinery/pkg/apis/meta/v1/label_selector.io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector(
-                                                        match_expressions = [
-                                                            jobset.models.io/k8s/apimachinery/pkg/apis/meta/v1/label_selector_requirement.io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement(
-                                                                key = '', 
-                                                                operator = '', 
-                                                                values = [
-                                                                    ''
-                                                                    ], )
-                                                            ], 
-                                                        match_labels = {
-                                                            'key' : ''
-                                                            }, ), ), 
-                                                target = jobset.models.io/k8s/api/autoscaling/v2/metric_target.io.k8s.api.autoscaling.v2.MetricTarget(
-                                                    average_utilization = 56, 
-                                                    type = '', ), ), 
-                                            object = jobset.models.io/k8s/api/autoscaling/v2/object_metric_source.io.k8s.api.autoscaling.v2.ObjectMetricSource(
-                                                described_object = jobset.models.io/k8s/api/autoscaling/v2/cross_version_object_reference.io.k8s.api.autoscaling.v2.CrossVersionObjectReference(
-                                                    api_version = '', 
-                                                    kind = '', 
-                                                    name = '', ), 
-                                                metric = jobset.models.io/k8s/api/autoscaling/v2/metric_identifier.io.k8s.api.autoscaling.v2.MetricIdentifier(
-                                                    name = '', ), 
-                                                target = , ), 
-                                            pods = jobset.models.io/k8s/api/autoscaling/v2/pods_metric_source.io.k8s.api.autoscaling.v2.PodsMetricSource(
-                                                metric = , 
-                                                target = , ), 
-                                            resource = jobset.models.io/k8s/api/autoscaling/v2/resource_metric_source.io.k8s.api.autoscaling.v2.ResourceMetricSource(
-                                                name = '', 
-                                                target = , ), 
-                                            type = '', )
-                                        ], 
-                                    min_replicas = 56, ), 
                                 replicated_job_name = '', ), 
                             startup_policy = jobset.models.jobset_v1alpha2_startup_policy.JobsetV1alpha2StartupPolicy(
                                 startup_policy_order = '', ), 

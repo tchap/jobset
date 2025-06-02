@@ -7,32 +7,6 @@
   },
   "paths": {},
   "definitions": {
-    "jobset.v1alpha2.AutoScaling": {
-      "type": "object",
-      "required": [
-        "minReplicas",
-        "maxReplicas"
-      ],
-      "properties": {
-        "maxReplicas": {
-          "type": "integer",
-          "format": "int32",
-          "default": 0
-        },
-        "metrics": {
-          "type": "array",
-          "items": {
-            "default": {},
-            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.1/api/openapi-spec/swagger.json#/definitions/io.k8s.api.autoscaling.v2.MetricSpec"
-          }
-        },
-        "minReplicas": {
-          "type": "integer",
-          "format": "int32",
-          "default": 0
-        }
-      }
-    },
     "jobset.v1alpha2.Coordinator": {
       "description": "Coordinator defines which pod can be marked as the coordinator for the JobSet workload.",
       "type": "object",
@@ -396,14 +370,9 @@
     "jobset.v1alpha2.Scale": {
       "type": "object",
       "required": [
-        "replicatedJobName",
-        "autoScaling"
+        "replicatedJobName"
       ],
       "properties": {
-        "autoScaling": {
-          "default": {},
-          "$ref": "#/definitions/jobset.v1alpha2.AutoScaling"
-        },
         "replicatedJobName": {
           "type": "string",
           "default": ""

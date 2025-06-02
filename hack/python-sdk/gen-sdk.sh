@@ -45,14 +45,12 @@ echo "Generating Python SDK for JobSet..."
 # Defaults the container engine to docker
 CONTAINER_ENGINE=${CONTAINER_ENGINE:-docker}
 
-volume_opts=""
-if [[ "$CONTAINER_ENGINE" == podman ]]; then
-  volume_opts=":rw,z"
-fi
-
 user="$(id -u):$(id -g)"
+volume_opts=""
+
 if [[ "$CONTAINER_ENGINE" == podman ]]; then
   user="root:root"
+  volume_opts=":rw,z"
 fi
 
 # Install the sdk using docker, using the user that is running the container engine so that files can still be removed

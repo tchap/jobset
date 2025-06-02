@@ -17,8 +17,7 @@ package v1alpha2
 // ScaleApplyConfiguration represents a declarative configuration of the Scale type for use
 // with apply.
 type ScaleApplyConfiguration struct {
-	ReplicatedJobName *string                        `json:"replicatedJobName,omitempty"`
-	AutoScaling       *AutoScalingApplyConfiguration `json:"autoScaling,omitempty"`
+	ReplicatedJobName *string `json:"replicatedJobName,omitempty"`
 }
 
 // ScaleApplyConfiguration constructs a declarative configuration of the Scale type for use with
@@ -32,13 +31,5 @@ func Scale() *ScaleApplyConfiguration {
 // If called multiple times, the ReplicatedJobName field is set to the value of the last call.
 func (b *ScaleApplyConfiguration) WithReplicatedJobName(value string) *ScaleApplyConfiguration {
 	b.ReplicatedJobName = &value
-	return b
-}
-
-// WithAutoScaling sets the AutoScaling field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AutoScaling field is set to the value of the last call.
-func (b *ScaleApplyConfiguration) WithAutoScaling(value *AutoScalingApplyConfiguration) *ScaleApplyConfiguration {
-	b.AutoScaling = value
 	return b
 }

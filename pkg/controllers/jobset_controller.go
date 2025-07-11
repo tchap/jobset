@@ -891,6 +891,10 @@ func jobSetSuspended(js *jobset.JobSet) bool {
 	return ptr.Deref(js.Spec.Suspend, false)
 }
 
+func jobSetTerminated(js *jobset.JobSet) bool {
+	return ptr.Deref(js.Spec.Terminate, false)
+}
+
 func jobSuspended(job *batchv1.Job) bool {
 	return ptr.Deref(job.Spec.Suspend, false)
 }

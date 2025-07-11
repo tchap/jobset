@@ -86,6 +86,8 @@ const (
 	JobSetFailed JobSetConditionType = "Failed"
 	// JobSetSuspended means the job is suspended.
 	JobSetSuspended JobSetConditionType = "Suspended"
+	// JobSetTerminated means the job is terminated.
+	JobSetTerminated JobSetConditionType = "Terminated"
 	// JobSetStartupPolicyInProgress means the StartupPolicy is in progress.
 	JobSetStartupPolicyInProgress JobSetConditionType = "StartupPolicyInProgress"
 	// JobSetStartupPolicyCompleted means the StartupPolicy has completed.
@@ -126,6 +128,9 @@ type JobSetSpec struct {
 
 	// Suspend suspends all running child Jobs when set to true.
 	Suspend *bool `json:"suspend,omitempty"`
+
+	// Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.
+	Terminate *bool `json:"terminate,omitempty"`
 
 	// Coordinator can be used to assign a specific pod as the coordinator for
 	// the JobSet. If defined, an annotation will be added to all Jobs and pods with

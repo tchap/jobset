@@ -202,7 +202,6 @@ class TestJobsetV1alpha2JobSet(unittest.TestCase):
                         operator = '', ), 
                     suspend = True, 
                     terminate = True, 
-                    terminate_strategy = '', 
                     ttl_seconds_after_finished = 56, ),
                 status = jobset.models.jobset_v1alpha2_job_set_status.JobsetV1alpha2JobSetStatus(
                     conditions = [

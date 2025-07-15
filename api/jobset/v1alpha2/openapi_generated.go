@@ -376,13 +376,6 @@ func schema_jobset_api_jobset_v1alpha2_JobSetSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"terminateStrategy": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TerminateStrategy is applied when Terminate is set to true.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"coordinator": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Coordinator can be used to assign a specific pod as the coordinator for the JobSet. If defined, an annotation will be added to all Jobs and pods with coordinator pod, which contains the stable network endpoint where the coordinator pod can be reached. jobset.sigs.k8s.io/coordinator=<pod hostname>.<headless service>",
@@ -456,7 +449,7 @@ func schema_jobset_api_jobset_v1alpha2_JobSetStatus(ref common.ReferenceCallback
 					},
 					"terminalState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TerminalState the state of the JobSet when it finishes execution. It can be either Completed or Failed. Otherwise, it is empty by default.",
+							Description: "TerminalState the state of the JobSet when it finishes execution. It can be Completed, Failed or Terminated. Otherwise, it is empty by default.",
 							Type:        []string{"string"},
 							Format:      "",
 						},

@@ -94,13 +94,6 @@ const (
 	JobSetStartupPolicyCompleted JobSetConditionType = "StartupPolicyCompleted"
 )
 
-type JobSetTerminateStrategy string
-
-const (
-	JobSetTerminateStrategyDeletePods  JobSetTerminateStrategy = "DeletePods"
-	JobSetTerminateStrategySuspendPods JobSetTerminateStrategy = "SuspendPods"
-)
-
 // JobSetSpec defines the desired state of JobSet
 // +kubebuilder:validation:XValidation:rule="!(has(self.startupPolicy) && self.startupPolicy.startupPolicyOrder == 'InOrder' && self.replicatedJobs.exists(x, has(x.dependsOn)))",message="StartupPolicy and DependsOn APIs are mutually exclusive"
 type JobSetSpec struct {
@@ -138,11 +131,6 @@ type JobSetSpec struct {
 
 	// Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.
 	Terminate *bool `json:"terminate,omitempty"`
-
-	// TerminateStrategy is applied when Terminate is set to true.
-	//
-	// +kubebuilder:validation:Enum:=DeleteJobs;SuspendJobs
-	TerminateStrategy *JobSetTerminateStrategy `json:"terminateStrategy,omitempty"`
 
 	// Coordinator can be used to assign a specific pod as the coordinator for
 	// the JobSet. If defined, an annotation will be added to all Jobs and pods with
@@ -193,7 +181,7 @@ type JobSetStatus struct {
 	RestartsCountTowardsMax int32 `json:"restartsCountTowardsMax,omitempty"`
 
 	// TerminalState the state of the JobSet when it finishes execution.
-	// It can be either Completed or Failed. Otherwise, it is empty by default.
+	// It can be Completed, Failed or Terminated. Otherwise, it is empty by default.
 	TerminalState string `json:"terminalState,omitempty"`
 
 	// ReplicatedJobsStatus track the number of JobsReady for each replicatedJob.

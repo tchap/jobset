@@ -163,7 +163,6 @@ class TestJobsetV1alpha2JobSetSpec(unittest.TestCase):
                         ], ),
                 suspend = True,
                 terminate = True,
-                terminate_strategy = '',
                 ttl_seconds_after_finished = 56
             )
         else:

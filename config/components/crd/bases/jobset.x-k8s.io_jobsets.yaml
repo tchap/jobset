@@ -9075,13 +9075,6 @@ spec:
                 description: Terminate, when set to true, suspends all child Jobs
                   and seals the JobSet so that it cannot be modified anymore.
                 type: boolean
-              terminateStrategy:
-                description: TerminateStrategy is applied when Terminate is set to
-                  true.
-                enum:
-                - DeleteJobs
-                - SuspendJobs
-                type: string
               ttlSecondsAfterFinished:
                 description: |-
                   TTLSecondsAfterFinished limits the lifetime of a JobSet that has finished
@@ -9224,7 +9217,7 @@ spec:
               terminalState:
                 description: |-
                   TerminalState the state of the JobSet when it finishes execution.
-                  It can be either Completed or Failed. Otherwise, it is empty by default.
+                  It can be Completed, Failed or Terminated. Otherwise, it is empty by default.
                 type: string
             type: object
         type: object

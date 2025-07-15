@@ -2044,60 +2044,7 @@ func TestValidateUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "set terminate and terminateStrategy",
-			js: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					Terminate:         ptr.To(true),
-					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
-					ReplicatedJobs:    validReplicatedJobs,
-				},
-			},
-			oldJs: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					ReplicatedJobs: validReplicatedJobs,
-				},
-			},
-		},
-		{
 			name: "set terminate",
-			js: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					Terminate:         ptr.To(true),
-					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
-					ReplicatedJobs:    validReplicatedJobs,
-				},
-			},
-			oldJs: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
-					ReplicatedJobs:    validReplicatedJobs,
-				},
-			},
-		},
-		{
-			name: "set terminate and update terminateStrategy",
-			js: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					Terminate:         ptr.To(true),
-					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
-					ReplicatedJobs:    validReplicatedJobs,
-				},
-			},
-			oldJs: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategyDeletePods),
-					ReplicatedJobs:    validReplicatedJobs,
-				},
-			},
-		},
-		{
-			name: "cannot set terminate without terminateStrategy",
 			js: &jobset.JobSet{
 				ObjectMeta: validObjectMeta,
 				Spec: jobset.JobSetSpec{
@@ -2111,9 +2058,6 @@ func TestValidateUpdate(t *testing.T) {
 					ReplicatedJobs: validReplicatedJobs,
 				},
 			},
-			want: field.ErrorList{
-				field.NotFound(field.NewPath("spec").Child("terminateStrategy"), "must be set when terminating"),
-			}.ToAggregate(),
 		},
 		{
 			name: "cannot update a terminated JobSet",

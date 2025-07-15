@@ -209,6 +209,14 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 		return ctrl.Result{}, err
 	}
 
+	// Handle terminating a jobset.
+	if jobSetTerminated(js) {
+		if err := r.terminateJobSet(ctx, js, updateStatusOpts); err != nil {
+			log.Error(err, "terminating jobset")
+			return ctrl.Result{}, err
+		}
+	}
+
 	// Handle suspending a jobset or resuming a suspended jobset.
 	jobsetSuspended := jobSetSuspended(js)
 	if jobsetSuspended {
@@ -459,6 +467,11 @@ func (r *JobSetReconciler) resumeJobsIfNecessary(ctx context.Context, js *jobset
 	// the JobSet is no longer suspended.
 	setJobSetResumedCondition(js, updateStatusOpts)
 	return nil
+}
+
+func (r *JobSetReconciler) terminateJobSet(ctx context.Context, js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) error {
+	// Set the terminated condition to true.
+	setJobSetTerminatedCondition(js, updateStatusOpts)
 }
 
 func (r *JobSetReconciler) resumeJob(ctx context.Context, job *batchv1.Job, replicatedJobTemplateMap map[string]corev1.PodTemplateSpec) error {
@@ -1022,6 +1035,11 @@ func setJobSetResumedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdate
 	setCondition(js, makeResumedConditionOpts(), updateStatusOpts)
 }
 
+// setJobSetTerminatedCondition sets a condition on the JobSet status indicating it has been marked for termination.
+func setJobSetTerminatedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) {
+	setCondition(js, makeTerminatedConditionOpts(), updateStatusOpts)
+}
+
 // completedConditionsOpts contains the options we use to generate the JobSet completed condition.
 func makeCompletedConditionsOpts() *conditionOpts {
 	return &conditionOpts{
@@ -1059,6 +1077,20 @@ func makeResumedConditionOpts() *conditionOpts {
 			LastTransitionTime: metav1.Now(),
 			Reason:             constants.JobSetResumedReason,
 			Message:            constants.JobSetResumedMessage,
+		},
+	}
+}
+
+// makeTerminatedConditionOpts returns the options we use to generate the JobSet terminated condition.
+func makeTerminatedConditionOpts() *conditionOpts {
+	return &conditionOpts{
+		eventType: corev1.EventTypeNormal,
+		condition: &metav1.Condition{
+			Type:               string(jobset.JobSetTerminated),
+			Status:             metav1.ConditionTrue,
+			LastTransitionTime: metav1.Now(),
+			Reason:             constants.JobSetTerminatedReason,
+			Message:            constants.JobSetTerminatedMessage,
 		},
 	}
 }

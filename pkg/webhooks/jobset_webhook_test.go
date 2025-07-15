@@ -2044,23 +2044,7 @@ func TestValidateUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "update terminate",
-			js: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					Terminate:      ptr.To(true),
-					ReplicatedJobs: validReplicatedJobs,
-				},
-			},
-			oldJs: &jobset.JobSet{
-				ObjectMeta: validObjectMeta,
-				Spec: jobset.JobSetSpec{
-					ReplicatedJobs: validReplicatedJobs,
-				},
-			},
-		},
-		{
-			name: "update terminate and terminateStrategy",
+			name: "set terminate and terminateStrategy",
 			js: &jobset.JobSet{
 				ObjectMeta: validObjectMeta,
 				Spec: jobset.JobSetSpec{
@@ -2075,6 +2059,61 @@ func TestValidateUpdate(t *testing.T) {
 					ReplicatedJobs: validReplicatedJobs,
 				},
 			},
+		},
+		{
+			name: "set terminate",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:         ptr.To(true),
+					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
+					ReplicatedJobs:    validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
+					ReplicatedJobs:    validReplicatedJobs,
+				},
+			},
+		},
+		{
+			name: "set terminate and update terminateStrategy",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:         ptr.To(true),
+					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
+					ReplicatedJobs:    validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategyDeletePods),
+					ReplicatedJobs:    validReplicatedJobs,
+				},
+			},
+		},
+		{
+			name: "cannot set terminate without terminateStrategy",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:      ptr.To(true),
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+			want: field.ErrorList{
+				field.NotFound(field.NewPath("spec").Child("terminateStrategy"), "must be set when terminating"),
+			}.ToAggregate(),
 		},
 		{
 			name: "cannot update a terminated JobSet",
@@ -2401,8 +2440,12 @@ func TestValidateUpdate(t *testing.T) {
 			newObj := tc.js.DeepCopyObject()
 			oldObj := tc.oldJs.DeepCopyObject()
 			_, err = webhook.ValidateUpdate(context.TODO(), oldObj, newObj)
+			// Shortcut for equal errors. This doesn't work with cmp.Diff.
+			if errors.Is(tc.want, err) {
+				return
+			}
 			// Ignore bad value to keep test cases short and readable.
-			if diff := cmp.Diff(tc.want, err, cmpopts.IgnoreFields(field.Error{}, "BadValue"), cmpopts.EquateErrors()); diff != "" {
+			if diff := cmp.Diff(tc.want, err, cmpopts.IgnoreFields(field.Error{}, "BadValue")); diff != "" {
 				t.Errorf("ValidateResources() mismatch (-want +got):\n%s", diff)
 			}
 		})

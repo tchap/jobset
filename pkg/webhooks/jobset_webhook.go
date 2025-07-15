@@ -170,8 +170,8 @@ func (j *jobSetWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) 
 
 	// Ensure that the JobSet is not marked as terminated.
 	if ptr.Deref(js.Spec.Terminate, false) {
-		fieldPath := field.NewPath("spec", "terminate")
-		allErrs = append(allErrs, field.Invalid(fieldPath, true, "cannot create a terminated JobSet"))
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("spec", "terminate"), true, "cannot create a terminated JobSet"))
 	}
 
 	// Ensure that a provided subdomain is a valid DNS name
@@ -295,6 +295,13 @@ func (j *jobSetWebhook) ValidateUpdate(ctx context.Context, old, newObj runtime.
 		return nil, errTerminatedJobSetUpdate
 	}
 
+	// TerminateStrategy must be set when terminating.
+	var errs field.ErrorList
+	if ptr.Deref(js.Spec.Terminate, false) && js.Spec.TerminateStrategy == nil {
+		errs = append(errs, field.NotFound(
+			field.NewPath("spec", "terminateStrategy"), "must be set when terminating"))
+	}
+
 	// Allow pod template to be mutated for suspended JobSets, or JobSets getting suspended.
 	// This is needed for integration with Kueue/DWS.
 	if ptr.Deref(oldJS.Spec.Suspend, false) || ptr.Deref(js.Spec.Suspend, false) {
@@ -311,7 +318,7 @@ func (j *jobSetWebhook) ValidateUpdate(ctx context.Context, old, newObj runtime.
 	}
 
 	// Note that SucccessPolicy and failurePolicy are made immutable via CEL.
-	errs := apivalidation.ValidateImmutableField(mungedSpec.ReplicatedJobs, oldJS.Spec.ReplicatedJobs, field.NewPath("spec").Child("replicatedJobs"))
+	errs = append(errs, apivalidation.ValidateImmutableField(mungedSpec.ReplicatedJobs, oldJS.Spec.ReplicatedJobs, field.NewPath("spec").Child("replicatedJobs"))...)
 	errs = append(errs, apivalidation.ValidateImmutableField(mungedSpec.ManagedBy, oldJS.Spec.ManagedBy, field.NewPath("spec").Child("managedBy"))...)
 	return nil, errs.ToAggregate()
 }

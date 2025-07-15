@@ -166,6 +166,12 @@ func (j *jobSetWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) 
 		allErrs = append(allErrs, fmt.Errorf("DependsOn can't be set for the first ReplicatedJob"))
 	}
 
+	// Ensure that the JobSet is not marked as terminated.
+	if ptr.Deref(js.Spec.Terminate, false) {
+		fieldPath := field.NewPath("spec", "terminate")
+		allErrs = append(allErrs, field.Invalid(fieldPath, true, "cannot create a terminated JobSet"))
+	}
+
 	// Ensure that a provided subdomain is a valid DNS name
 	if js.Spec.Network != nil && js.Spec.Network.Subdomain != "" {
 		fieldPath := field.NewPath("spec", "network", "subdomain")
@@ -301,7 +307,6 @@ func (j *jobSetWebhook) ValidateUpdate(ctx context.Context, old, newObj runtime.
 			mungedSpec.ReplicatedJobs[index].Template.Spec.Template.Spec.SchedulingGates = oldJS.Spec.ReplicatedJobs[index].Template.Spec.Template.Spec.SchedulingGates
 		}
 	}
-	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	// Note that SucccessPolicy and failurePolicy are made immutable via CEL.
 	errs := apivalidation.ValidateImmutableField(mungedSpec.ReplicatedJobs, oldJS.Spec.ReplicatedJobs, field.NewPath("spec").Child("replicatedJobs"))

@@ -2060,6 +2060,23 @@ func TestValidateUpdate(t *testing.T) {
 			},
 		},
 		{
+			name: "update terminate and terminateStrategy",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:         ptr.To(true),
+					TerminateStrategy: ptr.To(jobset.JobSetTerminateStrategySuspendPods),
+					ReplicatedJobs:    validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+		},
+		{
 			name: "cannot update a terminated JobSet",
 			js: &jobset.JobSet{
 				ObjectMeta: validObjectMeta,

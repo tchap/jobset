@@ -211,7 +211,7 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 
 	// Handle terminating a jobset.
 	if jobSetTerminated(js) {
-		if err := r.terminateJobSet(ctx, js, updateStatusOpts); err != nil {
+		if err := r.terminateJobSet(ctx, js, ownedJobs.active, updateStatusOpts); err != nil {
 			log.Error(err, "terminating jobset")
 			return ctrl.Result{}, err
 		}
@@ -469,9 +469,20 @@ func (r *JobSetReconciler) resumeJobsIfNecessary(ctx context.Context, js *jobset
 	return nil
 }
 
-func (r *JobSetReconciler) terminateJobSet(ctx context.Context, js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) error {
-	// Set the terminated condition to true.
-	setJobSetTerminatedCondition(js, updateStatusOpts)
+func (r *JobSetReconciler) terminateJobSet(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
+	// If the terminal state is set, we are done.
+	if js.Status.TerminalState != "" {
+		return nil
+	}
+
+	// If there are no active child jobs, we are done.
+	if len(activeJobs) == 0 {
+		setJobSetTerminatedCondition(js, updateStatusOpts)
+		return nil
+	}
+
+	// Otherwise mark the child jobs as suspended and wait for reconciliation.
+	return r.suspendJobs(ctx, js, activeJobs, updateStatusOpts)
 }
 
 func (r *JobSetReconciler) resumeJob(ctx context.Context, job *batchv1.Job, replicatedJobTemplateMap map[string]corev1.PodTemplateSpec) error {
@@ -885,7 +896,7 @@ func sha1Hash(s string) string {
 
 func jobSetFinished(js *jobset.JobSet) bool {
 	for _, c := range js.Status.Conditions {
-		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed)) && c.Status == metav1.ConditionTrue {
+		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed) || c.Type == string(jobset.JobSetTerminated)) && c.Status == metav1.ConditionTrue {
 			return true
 		}
 	}
@@ -1038,6 +1049,9 @@ func setJobSetResumedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdate
 // setJobSetTerminatedCondition sets a condition on the JobSet status indicating it has been marked for termination.
 func setJobSetTerminatedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) {
 	setCondition(js, makeTerminatedConditionOpts(), updateStatusOpts)
+	js.Status.TerminalState = string(jobset.JobSetTerminated)
+	// Update the metrics
+	metrics.JobSetTerminated(js.Name, js.Namespace)
 }
 
 // completedConditionsOpts contains the options we use to generate the JobSet completed condition.

@@ -282,6 +282,11 @@ func (j *jobSetWebhook) ValidateUpdate(ctx context.Context, old, newObj runtime.
 	}
 	mungedSpec := js.Spec.DeepCopy()
 
+	// No updates are allowed for a terminated JobSet.
+	if ptr.Deref(oldJS.Spec.Terminate, false) {
+		return nil, errors.New("cannot update a terminated JobSet")
+	}
+
 	// Allow pod template to be mutated for suspended JobSets, or JobSets getting suspended.
 	// This is needed for integration with Kueue/DWS.
 	if ptr.Deref(oldJS.Spec.Suspend, false) || ptr.Deref(js.Spec.Suspend, false) {
@@ -296,6 +301,7 @@ func (j *jobSetWebhook) ValidateUpdate(ctx context.Context, old, newObj runtime.
 			mungedSpec.ReplicatedJobs[index].Template.Spec.Template.Spec.SchedulingGates = oldJS.Spec.ReplicatedJobs[index].Template.Spec.Template.Spec.SchedulingGates
 		}
 	}
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	// Note that SucccessPolicy and failurePolicy are made immutable via CEL.
 	errs := apivalidation.ValidateImmutableField(mungedSpec.ReplicatedJobs, oldJS.Spec.ReplicatedJobs, field.NewPath("spec").Child("replicatedJobs"))

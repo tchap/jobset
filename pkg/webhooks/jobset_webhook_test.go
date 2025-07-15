@@ -1050,6 +1050,37 @@ func TestValidateCreate(t *testing.T) {
 				errors.New(podNameTooLongErrorMsg),
 			),
 		},
+		{
+			name: "Terminate flag is set",
+			js: &jobset.JobSet{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "JobSet",
+					APIVersion: "jobset.x-k8s.io/v1alpha2",
+				},
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate: ptr.To(true),
+					ReplicatedJobs: []jobset.ReplicatedJob{
+						{
+							Name:      "test-jobset-replicated-job-0",
+							GroupName: "default",
+							Replicas:  1,
+							Template: batchv1.JobTemplateSpec{
+								Spec: batchv1.JobSpec{
+									Template: validPodTemplateSpec,
+								},
+							},
+						},
+					},
+					SuccessPolicy: &jobset.SuccessPolicy{
+						Operator: jobset.OperatorAll,
+					},
+				},
+			},
+			want: errors.Join(
+				fmt.Errorf("cannot create a terminated JobSet"),
+			),
+		},
 	}
 
 	jobsetControllerNameTests := []validationTestCase{

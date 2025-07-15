@@ -1051,7 +1051,7 @@ func TestValidateCreate(t *testing.T) {
 			),
 		},
 		{
-			name: "Terminate flag is set",
+			name: "terminate flag is set",
 			js: &jobset.JobSet{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "JobSet",

@@ -2044,6 +2044,39 @@ func TestValidateUpdate(t *testing.T) {
 			},
 		},
 		{
+			name: "update terminate",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:      ptr.To(true),
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+		},
+		{
+			name: "cannot update a terminated JobSet",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					Terminate:      ptr.To(true),
+					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+			want: errTerminatedJobSetUpdate,
+		},
+		{
 			name: "update labels",
 			js: &jobset.JobSet{
 				ObjectMeta: metav1.ObjectMeta{Name: "js", Labels: map[string]string{"hello": "world"}},
@@ -2352,7 +2385,7 @@ func TestValidateUpdate(t *testing.T) {
 			oldObj := tc.oldJs.DeepCopyObject()
 			_, err = webhook.ValidateUpdate(context.TODO(), oldObj, newObj)
 			// Ignore bad value to keep test cases short and readable.
-			if diff := cmp.Diff(tc.want, err, cmpopts.IgnoreFields(field.Error{}, "BadValue")); diff != "" {
+			if diff := cmp.Diff(tc.want, err, cmpopts.IgnoreFields(field.Error{}, "BadValue"), cmpopts.EquateErrors()); diff != "" {
 				t.Errorf("ValidateResources() mismatch (-want +got):\n%s", diff)
 			}
 		})

@@ -9071,6 +9071,17 @@ spec:
               suspend:
                 description: Suspend suspends all running child Jobs when set to true.
                 type: boolean
+              terminate:
+                description: Terminate, when set to true, suspends all child Jobs
+                  and seals the JobSet so that it cannot be modified anymore.
+                type: boolean
+              terminateStrategy:
+                description: TerminateStrategy is applied when Terminate is set to
+                  true.
+                enum:
+                - DeleteJobs
+                - SuspendJobs
+                type: string
               ttlSecondsAfterFinished:
                 description: |-
                   TTLSecondsAfterFinished limits the lifetime of a JobSet that has finished

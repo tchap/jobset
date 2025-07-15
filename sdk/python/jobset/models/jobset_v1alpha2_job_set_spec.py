@@ -40,8 +40,10 @@ class JobsetV1alpha2JobSetSpec(BaseModel):
     startup_policy: Optional[JobsetV1alpha2StartupPolicy] = Field(default=None, alias="startupPolicy")
     success_policy: Optional[JobsetV1alpha2SuccessPolicy] = Field(default=None, alias="successPolicy")
     suspend: Optional[StrictBool] = Field(default=None, description="Suspend suspends all running child Jobs when set to true.")
+    terminate: Optional[StrictBool] = Field(default=None, description="Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.")
+    terminate_strategy: Optional[StrictStr] = Field(default=None, description="TerminateStrategy is applied when Terminate is set to true.", alias="terminateStrategy")
     ttl_seconds_after_finished: Optional[StrictInt] = Field(default=None, description="TTLSecondsAfterFinished limits the lifetime of a JobSet that has finished execution (either Complete or Failed). If this field is set, TTLSecondsAfterFinished after the JobSet finishes, it is eligible to be automatically deleted. When the JobSet is being deleted, its lifecycle guarantees (e.g. finalizers) will be honored. If this field is unset, the JobSet won't be automatically deleted. If this field is set to zero, the JobSet becomes eligible to be deleted immediately after it finishes.", alias="ttlSecondsAfterFinished")
-    __properties: ClassVar[List[str]] = ["coordinator", "failurePolicy", "managedBy", "network", "replicatedJobs", "startupPolicy", "successPolicy", "suspend", "ttlSecondsAfterFinished"]
+    __properties: ClassVar[List[str]] = ["coordinator", "failurePolicy", "managedBy", "network", "replicatedJobs", "startupPolicy", "successPolicy", "suspend", "terminate", "terminateStrategy", "ttlSecondsAfterFinished"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -124,6 +126,8 @@ class JobsetV1alpha2JobSetSpec(BaseModel):
             "startupPolicy": JobsetV1alpha2StartupPolicy.from_dict(obj["startupPolicy"]) if obj.get("startupPolicy") is not None else None,
             "successPolicy": JobsetV1alpha2SuccessPolicy.from_dict(obj["successPolicy"]) if obj.get("successPolicy") is not None else None,
             "suspend": obj.get("suspend"),
+            "terminate": obj.get("terminate"),
+            "terminateStrategy": obj.get("terminateStrategy"),
             "ttlSecondsAfterFinished": obj.get("ttlSecondsAfterFinished")
         })
         return _obj

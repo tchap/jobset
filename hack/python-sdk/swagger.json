@@ -124,7 +124,7 @@
         },
         "metadata": {
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.2/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"
         },
         "spec": {
           "default": {},
@@ -160,7 +160,7 @@
         },
         "metadata": {
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ListMeta"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.2/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.ListMeta"
         }
       }
     },
@@ -208,6 +208,14 @@
           "description": "Suspend suspends all running child Jobs when set to true.",
           "type": "boolean"
         },
+        "terminate": {
+          "description": "Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.",
+          "type": "boolean"
+        },
+        "terminateStrategy": {
+          "description": "TerminateStrategy is applied when Terminate is set to true.",
+          "type": "string"
+        },
         "ttlSecondsAfterFinished": {
           "description": "TTLSecondsAfterFinished limits the lifetime of a JobSet that has finished execution (either Complete or Failed). If this field is set, TTLSecondsAfterFinished after the JobSet finishes, it is eligible to be automatically deleted. When the JobSet is being deleted, its lifecycle guarantees (e.g. finalizers) will be honored. If this field is unset, the JobSet won't be automatically deleted. If this field is set to zero, the JobSet becomes eligible to be deleted immediately after it finishes.",
           "type": "integer",
@@ -223,7 +231,7 @@
           "type": "array",
           "items": {
             "default": {},
-            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Condition"
+            "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.2/api/openapi-spec/swagger.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.Condition"
           },
           "x-kubernetes-list-map-keys": [
             "type"
@@ -312,7 +320,7 @@
         "template": {
           "description": "Template defines the template of the Job that will be created.",
           "default": {},
-          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.0/api/openapi-spec/swagger.json#/definitions/io.k8s.api.batch.v1.JobTemplateSpec"
+          "$ref": "https://raw.githubusercontent.com/kubernetes/kubernetes/refs/tags/v1.33.2/api/openapi-spec/swagger.json#/definitions/io.k8s.api.batch.v1.JobTemplateSpec"
         }
       }
     },

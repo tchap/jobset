@@ -201,6 +201,8 @@ class TestJobsetV1alpha2JobSet(unittest.TestCase):
                     success_policy = jobset.models.jobset_v1alpha2_success_policy.JobsetV1alpha2SuccessPolicy(
                         operator = '', ), 
                     suspend = True, 
+                    terminate = True, 
+                    terminate_strategy = '', 
                     ttl_seconds_after_finished = 56, ),
                 status = jobset.models.jobset_v1alpha2_job_set_status.JobsetV1alpha2JobSetStatus(
                     conditions = [

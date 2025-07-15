@@ -369,6 +369,20 @@ func schema_jobset_api_jobset_v1alpha2_JobSetSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"terminate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"terminateStrategy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "TerminateStrategy is applied when Terminate is set to true.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"coordinator": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Coordinator can be used to assign a specific pod as the coordinator for the JobSet. If defined, an annotation will be added to all Jobs and pods with coordinator pod, which contains the stable network endpoint where the coordinator pod can be reached. jobset.sigs.k8s.io/coordinator=<pod hostname>.<headless service>",

@@ -158,13 +158,13 @@ spec:
                 - message: Value is immutable
                   rule: self == oldSelf
               jobCleanupStrategy:
-                default: DeleteJobs
+                default: Delete
                 description: |-
                   JobCleanupStrategy defines what to do with active jobs when the JobSet is finished.
                   This applies to all possible conditions, i.e. Completed, Failed...
                 enum:
-                - DeleteJobs
-                - SuspendJobs
+                - Delete
+                - Suspend
                 type: string
               managedBy:
                 description: |-

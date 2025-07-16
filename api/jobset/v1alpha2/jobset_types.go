@@ -80,9 +80,9 @@ type JobCleanupStrategy string
 
 const (
 	// JobCleanupStrategyDelete causes active jobs to be deleted when the JobSet is finished.
-	JobCleanupStrategyDelete JobCleanupStrategy = "DeleteJobs"
+	JobCleanupStrategyDelete JobCleanupStrategy = "Delete"
 	// JobCleanupStrategySuspend causes active jobs to be suspended when the JobSet is finished.
-	JobCleanupStrategySuspend JobCleanupStrategy = "SuspendJobs"
+	JobCleanupStrategySuspend JobCleanupStrategy = "Suspend"
 )
 
 type JobSetConditionType string
@@ -139,8 +139,8 @@ type JobSetSpec struct {
 	// JobCleanupStrategy defines what to do with active jobs when the JobSet is finished.
 	// This applies to all possible conditions, i.e. Completed, Failed...
 	//
-	// +kubebuilder:validation:Enum=DeleteJobs;SuspendJobs
-	// +kubebuilder:default:=DeleteJobs
+	// +kubebuilder:validation:Enum=Delete;Suspend
+	// +kubebuilder:default:=Delete
 	JobCleanupStrategy *JobCleanupStrategy `json:"jobCleanupStrategy,omitempty"`
 
 	// Coordinator can be used to assign a specific pod as the coordinator for

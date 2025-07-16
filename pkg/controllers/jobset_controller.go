@@ -158,12 +158,12 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	rjobStatuses := r.calculateReplicatedJobStatuses(ctx, js, ownedJobs)
 	updateReplicatedJobsStatuses(js, rjobStatuses, updateStatusOpts)
 
-	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
+	// If JobSet is already finished, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
-		if err := r.deleteJobs(ctx, ownedJobs.active); err != nil {
-			log.Error(err, "deleting jobs")
-			return ctrl.Result{}, err
+		if err := r.applyJobCleanupStrategy(ctx, log, js, ownedJobs.active); err != nil {
+			return ctrl.Result{}, nil
 		}
+
 		requeueAfter, err := executeTTLAfterFinishedPolicy(ctx, r.Client, r.clock, js)
 		if err != nil {
 			log.Error(err, "executing ttl after finished policy")
@@ -388,6 +388,14 @@ func (r *JobSetReconciler) calculateReplicatedJobStatuses(ctx context.Context, j
 }
 
 func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
+	if err := r.suspendActiveJobs(ctx, activeJobs); err != nil {
+		return err
+	}
+	setJobSetSuspendedCondition(js, updateStatusOpts)
+	return nil
+}
+
+func (r *JobSetReconciler) suspendActiveJobs(ctx context.Context, activeJobs []*batchv1.Job) error {
 	for _, job := range activeJobs {
 		if !jobSuspended(job) {
 			job.Spec.Suspend = ptr.To(true)
@@ -396,7 +404,6 @@ func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, a
 			}
 		}
 	}
-	setJobSetSuspendedCondition(js, updateStatusOpts)
 	return nil
 }
 
@@ -608,6 +615,25 @@ func (r *JobSetReconciler) deleteJobs(ctx context.Context, jobsForDeletion []*ba
 		log.V(2).Info("successfully deleted job", "job", klog.KObj(targetJob), "restart attempt", targetJob.Labels[targetJob.Labels[constants.RestartsKey]])
 	})
 	return errors.Join(finalErrs...)
+}
+
+func (r *JobSetReconciler) applyJobCleanupStrategy(ctx context.Context, log klog.Logger, js *jobset.JobSet, activeJobs []*batchv1.Job) error {
+	if len(activeJobs) == 0 {
+		return nil
+	}
+
+	if ptr.Deref(js.Spec.JobCleanupStrategy, jobset.JobCleanupStrategyDelete) == jobset.JobCleanupStrategyDelete {
+		if err := r.deleteJobs(ctx, activeJobs); err != nil {
+			log.Error(err, "deleting remaining active jobs")
+			return err
+		}
+	} else {
+		if err := r.suspendActiveJobs(ctx, activeJobs); err != nil {
+			log.Error(err, "suspending remaining active jobs")
+			return err
+		}
+	}
+	return nil
 }
 
 // TODO: look into adopting service and updating the selector

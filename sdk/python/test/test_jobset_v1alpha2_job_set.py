@@ -95,6 +95,7 @@ class TestJobsetV1alpha2JobSet(unittest.TestCase):
                                     ''
                                     ], )
                             ], ), 
+                    job_cleanup_strategy = '', 
                     managed_by = '', 
                     network = jobset.models.jobset_v1alpha2_network.JobsetV1alpha2Network(
                         enable_dns_hostnames = True, 

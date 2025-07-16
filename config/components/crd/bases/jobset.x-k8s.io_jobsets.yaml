@@ -157,6 +157,15 @@ spec:
                 x-kubernetes-validations:
                 - message: Value is immutable
                   rule: self == oldSelf
+              jobCleanupStrategy:
+                default: DeleteJobs
+                description: |-
+                  JobCleanupStrategy defines what to do with active jobs when the JobSet is finished.
+                  This applies to all possible conditions, i.e. Completed, Failed...
+                enum:
+                - DeleteJobs
+                - SuspendJobs
+                type: string
               managedBy:
                 description: |-
                   ManagedBy is used to indicate the controller or entity that manages a JobSet.

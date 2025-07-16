@@ -158,12 +158,12 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	rjobStatuses := r.calculateReplicatedJobStatuses(ctx, js, ownedJobs)
 	updateReplicatedJobsStatuses(js, rjobStatuses, updateStatusOpts)
 
-	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
+	// If JobSet is already finished, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
-		if err := r.deleteJobs(ctx, ownedJobs.active); err != nil {
-			log.Error(err, "deleting jobs")
-			return ctrl.Result{}, err
+		if err := r.applyJobCleanupStrategy(ctx, log, js, ownedJobs.active); err != nil {
+			return ctrl.Result{}, nil
 		}
+
 		requeueAfter, err := executeTTLAfterFinishedPolicy(ctx, r.Client, r.clock, js)
 		if err != nil {
 			log.Error(err, "executing ttl after finished policy")
@@ -197,6 +197,13 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 		}
 	}
 
+	// Process the termination flag.
+	if jobSetTerminated(js) {
+		// Set Terminated condition and wait for the next reconciliation, which handles remaining active jobs.
+		setJobSetTerminatedCondition(js, updateStatusOpts)
+		return ctrl.Result{}, err
+	}
+
 	// If pod DNS hostnames are enabled, create a headless service for the JobSet
 	if err := r.createHeadlessSvcIfNecessary(ctx, js); err != nil {
 		log.Error(err, "creating headless service")
@@ -207,14 +214,6 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	if err := r.reconcileReplicatedJobs(ctx, js, ownedJobs, rjobStatuses, updateStatusOpts); err != nil {
 		log.Error(err, "creating jobs")
 		return ctrl.Result{}, err
-	}
-
-	// Handle terminating a jobset.
-	if jobSetTerminated(js) {
-		if err := r.terminateJobSet(ctx, js, ownedJobs.active, updateStatusOpts); err != nil {
-			log.Error(err, "terminating jobset")
-			return ctrl.Result{}, err
-		}
 	}
 
 	// Handle suspending a jobset or resuming a suspended jobset.
@@ -396,6 +395,14 @@ func (r *JobSetReconciler) calculateReplicatedJobStatuses(ctx context.Context, j
 }
 
 func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
+	if err := r.suspendActiveJobs(ctx, activeJobs); err != nil {
+		return err
+	}
+	setJobSetSuspendedCondition(js, updateStatusOpts)
+	return nil
+}
+
+func (r *JobSetReconciler) suspendActiveJobs(ctx context.Context, activeJobs []*batchv1.Job) error {
 	for _, job := range activeJobs {
 		if !jobSuspended(job) {
 			job.Spec.Suspend = ptr.To(true)
@@ -404,7 +411,6 @@ func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, a
 			}
 		}
 	}
-	setJobSetSuspendedCondition(js, updateStatusOpts)
 	return nil
 }
 
@@ -467,22 +473,6 @@ func (r *JobSetReconciler) resumeJobsIfNecessary(ctx context.Context, js *jobset
 	// the JobSet is no longer suspended.
 	setJobSetResumedCondition(js, updateStatusOpts)
 	return nil
-}
-
-func (r *JobSetReconciler) terminateJobSet(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
-	// If the terminal state is set, we are done.
-	if js.Status.TerminalState != "" {
-		return nil
-	}
-
-	// If there are no active child jobs, we are done.
-	if len(activeJobs) == 0 {
-		setJobSetTerminatedCondition(js, updateStatusOpts)
-		return nil
-	}
-
-	// Otherwise mark the child jobs as suspended and wait for reconciliation.
-	return r.suspendJobs(ctx, js, activeJobs, updateStatusOpts)
 }
 
 func (r *JobSetReconciler) resumeJob(ctx context.Context, job *batchv1.Job, replicatedJobTemplateMap map[string]corev1.PodTemplateSpec) error {
@@ -632,6 +622,25 @@ func (r *JobSetReconciler) deleteJobs(ctx context.Context, jobsForDeletion []*ba
 		log.V(2).Info("successfully deleted job", "job", klog.KObj(targetJob), "restart attempt", targetJob.Labels[targetJob.Labels[constants.RestartsKey]])
 	})
 	return errors.Join(finalErrs...)
+}
+
+func (r *JobSetReconciler) applyJobCleanupStrategy(ctx context.Context, log klog.Logger, js *jobset.JobSet, activeJobs []*batchv1.Job) error {
+	if len(activeJobs) == 0 {
+		return nil
+	}
+
+	if ptr.Deref(js.Spec.JobCleanupStrategy, jobset.JobCleanupStrategyDelete) == jobset.JobCleanupStrategyDelete {
+		if err := r.deleteJobs(ctx, activeJobs); err != nil {
+			log.Error(err, "deleting remaining active jobs")
+			return err
+		}
+	} else {
+		if err := r.suspendActiveJobs(ctx, activeJobs); err != nil {
+			log.Error(err, "suspending remaining active jobs")
+			return err
+		}
+	}
+	return nil
 }
 
 // TODO: look into adopting service and updating the selector
@@ -894,10 +903,10 @@ func sha1Hash(s string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// jobSetFinished returns true on Completed or Failed condition set to true.
+// jobSetFinished returns true on Completed, Failed or Terminated condition set to true.
 func jobSetFinished(js *jobset.JobSet) bool {
 	for _, c := range js.Status.Conditions {
-		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed)) && c.Status == metav1.ConditionTrue {
+		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed) || c.Type == string(jobset.JobSetTerminated)) && c.Status == metav1.ConditionTrue {
 			return true
 		}
 	}
@@ -916,6 +925,7 @@ func jobSetSuspended(js *jobset.JobSet) bool {
 	return ptr.Deref(js.Spec.Suspend, false)
 }
 
+// jobSetTerminated checks the Terminate flag.
 func jobSetTerminated(js *jobset.JobSet) bool {
 	return ptr.Deref(js.Spec.Terminate, false)
 }
@@ -1048,6 +1058,7 @@ func setJobSetResumedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdate
 }
 
 // setJobSetTerminatedCondition sets a condition on the JobSet status indicating it has been marked for termination.
+// TerminalState is also updated to Terminated.
 func setJobSetTerminatedCondition(js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) {
 	setCondition(js, makeTerminatedConditionOpts(), updateStatusOpts)
 	js.Status.TerminalState = string(jobset.JobSetTerminated)

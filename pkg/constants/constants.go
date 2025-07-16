@@ -83,6 +83,10 @@ const (
 	JobSetResumedReason  = "ResumeJobs"
 	JobSetResumedMessage = "jobset is resumed"
 
+	// Event reason and message related to terminating a JobSet.
+	JobSetTerminatedReason  = "JobSetTerminated"
+	JobSetTerminatedMessage = "jobset is terminated"
+
 	// Event reason and message related to applying the FailJobSet failure policy action.
 	FailJobSetActionReason  = "FailJobSetFailurePolicyAction"
 	FailJobSetActionMessage = "applying FailJobSet failure policy action"

@@ -2320,6 +2320,10 @@ func TestValidateUpdate(t *testing.T) {
 			newObj := tc.js.DeepCopyObject()
 			oldObj := tc.oldJs.DeepCopyObject()
 			_, err = webhook.ValidateUpdate(context.TODO(), oldObj, newObj)
+			// Shortcut for equal errors. This doesn't work with cmp.Diff.
+			if errors.Is(tc.want, err) {
+				return
+			}
 			// Ignore bad value to keep test cases short and readable.
 			if diff := cmp.Diff(tc.want, err, cmpopts.IgnoreFields(field.Error{}, "BadValue")); diff != "" {
 				t.Errorf("ValidateResources() mismatch (-want +got):\n%s", diff)

@@ -198,6 +198,11 @@ func (in *JobSetSpec) DeepCopyInto(out *JobSetSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.JobCleanupStrategy != nil {
+		in, out := &in.JobCleanupStrategy, &out.JobCleanupStrategy
+		*out = new(JobCleanupStrategy)
+		**out = **in
+	}
 	if in.Coordinator != nil {
 		in, out := &in.Coordinator, &out.Coordinator
 		*out = new(Coordinator)

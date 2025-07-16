@@ -30,6 +30,10 @@ spec:
       jsonPath: .spec.suspend
       name: Suspended
       type: string
+    - description: JobSet terminated
+      jsonPath: .spec.terminate
+      name: Terminated
+      type: string
     - description: Time this JobSet was created
       jsonPath: .metadata.creationTimestamp
       name: Age
@@ -158,9 +162,9 @@ spec:
                 - message: Value is immutable
                   rule: self == oldSelf
               jobCleanupStrategy:
-                default: DeletePods
+                default: DeleteJobs
                 description: |-
-                  JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished.
+                  JobCleanupStrategy defines what to do with active jobs when the JobSet is finished.
                   This applies to all possible conditions, be it Completed, Finished or Terminated.
                 enum:
                 - DeleteJobs
@@ -9096,8 +9100,6 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
-            required:
-            - jobCleanupStrategy
             type: object
             x-kubernetes-validations:
             - message: StartupPolicy and DependsOn APIs are mutually exclusive

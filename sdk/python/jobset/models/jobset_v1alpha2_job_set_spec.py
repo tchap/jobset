@@ -34,7 +34,7 @@ class JobsetV1alpha2JobSetSpec(BaseModel):
     """ # noqa: E501
     coordinator: Optional[JobsetV1alpha2Coordinator] = None
     failure_policy: Optional[JobsetV1alpha2FailurePolicy] = Field(default=None, alias="failurePolicy")
-    job_cleanup_strategy: StrictStr = Field(description="JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished. This applies to all possible conditions, be it Completed, Finished or Terminated.", alias="jobCleanupStrategy")
+    job_cleanup_strategy: Optional[StrictStr] = Field(default=None, description="JobCleanupStrategy defines what to do with active jobs when the JobSet is finished. This applies to all possible conditions, be it Completed, Finished or Terminated.", alias="jobCleanupStrategy")
     managed_by: Optional[StrictStr] = Field(default=None, description="ManagedBy is used to indicate the controller or entity that manages a JobSet. The built-in JobSet controller reconciles JobSets which don't have this field at all or the field value is the reserved string `jobset.sigs.k8s.io/jobset-controller`, but skips reconciling JobSets with a custom value for this field.  The value must be a valid domain-prefixed path (e.g. acme.io/foo) - all characters before the first \"/\" must be a valid subdomain as defined by RFC 1123. All characters trailing the first \"/\" must be valid HTTP Path characters as defined by RFC 3986. The value cannot exceed 63 characters. The field is immutable.", alias="managedBy")
     network: Optional[JobsetV1alpha2Network] = None
     replicated_jobs: Optional[List[JobsetV1alpha2ReplicatedJob]] = Field(default=None, description="ReplicatedJobs is the group of jobs that will form the set.", alias="replicatedJobs")
@@ -120,7 +120,7 @@ class JobsetV1alpha2JobSetSpec(BaseModel):
         _obj = cls.model_validate({
             "coordinator": JobsetV1alpha2Coordinator.from_dict(obj["coordinator"]) if obj.get("coordinator") is not None else None,
             "failurePolicy": JobsetV1alpha2FailurePolicy.from_dict(obj["failurePolicy"]) if obj.get("failurePolicy") is not None else None,
-            "jobCleanupStrategy": obj.get("jobCleanupStrategy") if obj.get("jobCleanupStrategy") is not None else '',
+            "jobCleanupStrategy": obj.get("jobCleanupStrategy"),
             "managedBy": obj.get("managedBy"),
             "network": JobsetV1alpha2Network.from_dict(obj["network"]) if obj.get("network") is not None else None,
             "replicatedJobs": [JobsetV1alpha2ReplicatedJob.from_dict(_item) for _item in obj["replicatedJobs"]] if obj.get("replicatedJobs") is not None else None,

@@ -378,8 +378,7 @@ func schema_jobset_api_jobset_v1alpha2_JobSetSpec(ref common.ReferenceCallback) 
 					},
 					"jobCleanupStrategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished. This applies to all possible conditions, be it Completed, Finished or Terminated.",
-							Default:     "",
+							Description: "JobCleanupStrategy defines what to do with active jobs when the JobSet is finished. This applies to all possible conditions, be it Completed, Finished or Terminated.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -405,7 +404,6 @@ func schema_jobset_api_jobset_v1alpha2_JobSetSpec(ref common.ReferenceCallback) 
 						},
 					},
 				},
-				Required: []string{"jobCleanupStrategy"},
 			},
 		},
 		Dependencies: []string{

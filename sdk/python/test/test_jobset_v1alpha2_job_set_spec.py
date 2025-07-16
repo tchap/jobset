@@ -168,7 +168,6 @@ class TestJobsetV1alpha2JobSetSpec(unittest.TestCase):
             )
         else:
             return JobsetV1alpha2JobSetSpec(
-                job_cleanup_strategy = '',
         )
         """
 

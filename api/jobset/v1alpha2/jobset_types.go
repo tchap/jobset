@@ -141,12 +141,12 @@ type JobSetSpec struct {
 	// Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.
 	Terminate *bool `json:"terminate,omitempty"`
 
-	// JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished.
+	// JobCleanupStrategy defines what to do with active jobs when the JobSet is finished.
 	// This applies to all possible conditions, be it Completed, Finished or Terminated.
 	//
 	// +kubebuilder:validation:Enum=DeleteJobs;SuspendJobs
-	// +kubebuilder:default=DeletePods
-	JobCleanupStrategy *JobCleanupStrategy `json:"jobCleanupStrategy"`
+	// +kubebuilder:default:=DeleteJobs
+	JobCleanupStrategy *JobCleanupStrategy `json:"jobCleanupStrategy,omitempty"`
 
 	// Coordinator can be used to assign a specific pod as the coordinator for
 	// the JobSet. If defined, an annotation will be added to all Jobs and pods with
@@ -239,6 +239,7 @@ type ReplicatedJobStatus struct {
 // +kubebuilder:printcolumn:name="Restarts",JSONPath=".status.restarts",type=string,description="Number of restarts"
 // +kubebuilder:printcolumn:name="Completed",type="string",priority=0,JSONPath=".status.conditions[?(@.type==\"Completed\")].status"
 // +kubebuilder:printcolumn:name="Suspended",type="string",JSONPath=".spec.suspend",description="JobSet suspended"
+// +kubebuilder:printcolumn:name="Terminated",type="string",JSONPath=".spec.terminate",description="JobSet terminated"
 // +kubebuilder:printcolumn:name="Age",JSONPath=".metadata.creationTimestamp",type=date,description="Time this JobSet was created"
 
 // JobSet is the Schema for the jobsets API

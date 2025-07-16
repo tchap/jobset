@@ -76,6 +76,15 @@ const (
 	JobGroupIndexKey string = "jobset.sigs.k8s.io/job-group-index"
 )
 
+type JobCleanupStrategy string
+
+const (
+	// JobCleanupStrategyDelete causes active jobs to be deleted when the JobSet is finished.
+	JobCleanupStrategyDelete JobCleanupStrategy = "DeleteJobs"
+	// JobCleanupStrategySuspend causes active jobs to be suspended when the JobSet is finished.
+	JobCleanupStrategySuspend JobCleanupStrategy = "SuspendJobs"
+)
+
 type JobSetConditionType string
 
 // These are built-in conditions of a JobSet.
@@ -131,6 +140,13 @@ type JobSetSpec struct {
 
 	// Terminate, when set to true, suspends all child Jobs and seals the JobSet so that it cannot be modified anymore.
 	Terminate *bool `json:"terminate,omitempty"`
+
+	// JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished.
+	// This applies to all possible conditions, be it Completed, Finished or Terminated.
+	//
+	// +kubebuilder:validation:Enum=DeleteJobs;SuspendJobs
+	// +kubebuilder:default=DeletePods
+	JobCleanupStrategy *JobCleanupStrategy `json:"jobCleanupStrategy"`
 
 	// Coordinator can be used to assign a specific pod as the coordinator for
 	// the JobSet. If defined, an annotation will be added to all Jobs and pods with

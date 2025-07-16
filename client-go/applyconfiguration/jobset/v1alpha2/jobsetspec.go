@@ -14,19 +14,24 @@ limitations under the License.
 
 package v1alpha2
 
+import (
+	jobsetv1alpha2 "sigs.k8s.io/jobset/api/jobset/v1alpha2"
+)
+
 // JobSetSpecApplyConfiguration represents a declarative configuration of the JobSetSpec type for use
 // with apply.
 type JobSetSpecApplyConfiguration struct {
-	ReplicatedJobs          []ReplicatedJobApplyConfiguration `json:"replicatedJobs,omitempty"`
-	Network                 *NetworkApplyConfiguration        `json:"network,omitempty"`
-	SuccessPolicy           *SuccessPolicyApplyConfiguration  `json:"successPolicy,omitempty"`
-	FailurePolicy           *FailurePolicyApplyConfiguration  `json:"failurePolicy,omitempty"`
-	StartupPolicy           *StartupPolicyApplyConfiguration  `json:"startupPolicy,omitempty"`
-	Suspend                 *bool                             `json:"suspend,omitempty"`
-	Terminate               *bool                             `json:"terminate,omitempty"`
-	Coordinator             *CoordinatorApplyConfiguration    `json:"coordinator,omitempty"`
-	ManagedBy               *string                           `json:"managedBy,omitempty"`
-	TTLSecondsAfterFinished *int32                            `json:"ttlSecondsAfterFinished,omitempty"`
+	ReplicatedJobs          []ReplicatedJobApplyConfiguration  `json:"replicatedJobs,omitempty"`
+	Network                 *NetworkApplyConfiguration         `json:"network,omitempty"`
+	SuccessPolicy           *SuccessPolicyApplyConfiguration   `json:"successPolicy,omitempty"`
+	FailurePolicy           *FailurePolicyApplyConfiguration   `json:"failurePolicy,omitempty"`
+	StartupPolicy           *StartupPolicyApplyConfiguration   `json:"startupPolicy,omitempty"`
+	Suspend                 *bool                              `json:"suspend,omitempty"`
+	Terminate               *bool                              `json:"terminate,omitempty"`
+	JobCleanupStrategy      *jobsetv1alpha2.JobCleanupStrategy `json:"jobCleanupStrategy,omitempty"`
+	Coordinator             *CoordinatorApplyConfiguration     `json:"coordinator,omitempty"`
+	ManagedBy               *string                            `json:"managedBy,omitempty"`
+	TTLSecondsAfterFinished *int32                             `json:"ttlSecondsAfterFinished,omitempty"`
 }
 
 // JobSetSpecApplyConfiguration constructs a declarative configuration of the JobSetSpec type for use with
@@ -93,6 +98,14 @@ func (b *JobSetSpecApplyConfiguration) WithSuspend(value bool) *JobSetSpecApplyC
 // If called multiple times, the Terminate field is set to the value of the last call.
 func (b *JobSetSpecApplyConfiguration) WithTerminate(value bool) *JobSetSpecApplyConfiguration {
 	b.Terminate = &value
+	return b
+}
+
+// WithJobCleanupStrategy sets the JobCleanupStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the JobCleanupStrategy field is set to the value of the last call.
+func (b *JobSetSpecApplyConfiguration) WithJobCleanupStrategy(value jobsetv1alpha2.JobCleanupStrategy) *JobSetSpecApplyConfiguration {
+	b.JobCleanupStrategy = &value
 	return b
 }
 

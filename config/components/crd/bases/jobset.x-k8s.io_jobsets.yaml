@@ -157,6 +157,15 @@ spec:
                 x-kubernetes-validations:
                 - message: Value is immutable
                   rule: self == oldSelf
+              jobCleanupStrategy:
+                default: DeletePods
+                description: |-
+                  JobCleanupStrategy is defined what to do with active jobs when the JobSet is finished.
+                  This applies to all possible conditions, be it Completed, Finished or Terminated.
+                enum:
+                - DeleteJobs
+                - SuspendJobs
+                type: string
               managedBy:
                 description: |-
                   ManagedBy is used to indicate the controller or entity that manages a JobSet.
@@ -9087,6 +9096,8 @@ spec:
                 format: int32
                 minimum: 0
                 type: integer
+            required:
+            - jobCleanupStrategy
             type: object
             x-kubernetes-validations:
             - message: StartupPolicy and DependsOn APIs are mutually exclusive

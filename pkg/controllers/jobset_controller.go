@@ -894,9 +894,10 @@ func sha1Hash(s string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+// jobSetFinished returns true on Completed or Failed condition set to true.
 func jobSetFinished(js *jobset.JobSet) bool {
 	for _, c := range js.Status.Conditions {
-		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed) || c.Type == string(jobset.JobSetTerminated)) && c.Status == metav1.ConditionTrue {
+		if (c.Type == string(jobset.JobSetCompleted) || c.Type == string(jobset.JobSetFailed)) && c.Status == metav1.ConditionTrue {
 			return true
 		}
 	}

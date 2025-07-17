@@ -859,6 +859,35 @@ func TestValidateCreate(t *testing.T) {
 			want: errors.Join(),
 		},
 		{
+			name: "job cleanup strategy is specified",
+			js: &jobset.JobSet{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "JobSet",
+					APIVersion: "jobset.x-k8s.io/v1alpha2",
+				},
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					ReplicatedJobs: []jobset.ReplicatedJob{
+						{
+							Name:      "test-jobset-replicated-job-0",
+							GroupName: "default",
+							Replicas:  1,
+							Template: batchv1.JobTemplateSpec{
+								Spec: batchv1.JobSpec{
+									Template: validPodTemplateSpec,
+								},
+							},
+						},
+					},
+					SuccessPolicy: &jobset.SuccessPolicy{
+						Operator: jobset.OperatorAll,
+					},
+					JobCleanupStrategy: ptr.To(jobset.JobCleanupStrategySuspend),
+				},
+			},
+			want: errors.Join(),
+		},
+		{
 			name: "success policy has non matching replicated job",
 			js: &jobset.JobSet{
 				TypeMeta: metav1.TypeMeta{
@@ -2025,6 +2054,23 @@ func TestValidateUpdate(t *testing.T) {
 				Spec: jobset.JobSetSpec{
 					Suspend:        ptr.To(true),
 					ReplicatedJobs: validReplicatedJobs,
+				},
+			},
+		},
+		{
+			name: "update jobCleanupStrategy",
+			js: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					JobCleanupStrategy: ptr.To(jobset.JobCleanupStrategySuspend),
+					ReplicatedJobs:     validReplicatedJobs,
+				},
+			},
+			oldJs: &jobset.JobSet{
+				ObjectMeta: validObjectMeta,
+				Spec: jobset.JobSetSpec{
+					JobCleanupStrategy: ptr.To(jobset.JobCleanupStrategyDelete),
+					ReplicatedJobs:     validReplicatedJobs,
 				},
 			},
 		},

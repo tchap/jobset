@@ -1204,9 +1204,9 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 			makeJobSet: func(ns *corev1.Namespace) *testing.JobSetWrapper {
 				return testJobSet(ns).
 					SuccessPolicy(&jobset.SuccessPolicy{
-						Operator:             jobset.OperatorAny,
-						TargetReplicatedJobs: []string{}, // applies to all replicatedJobs
-					})
+						Operator: jobset.OperatorAny,
+					}).
+					JobCleanupStrategy(jobset.JobCleanupStrategySuspend)
 			},
 			steps: []*step{
 				// Complete a job, and ensure JobSet completes based on 'any' success policy.
@@ -1229,12 +1229,13 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 						ginkgo.By("checking ReplicatedJobStatus")
 						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
 							{
-								Name:      "replicated-job-a",
-								Suspended: 1,
-							},
-							{
 								Name:      "replicated-job-b",
 								Succeeded: 1,
+								Suspended: 2,
+							},
+							{
+								Name:      "replicated-job-a",
+								Suspended: 1,
 							},
 						})
 					},
@@ -1286,15 +1287,23 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 				// Ensure remaining active jobs are suspended.
 				{
 					checkJobSetState: func(js *jobset.JobSet) {
-						ginkgo.By("Check ReplicatedJobStatus")
+						ginkgo.By("checking the remaining job is suspended")
+						gomega.Eventually(matchJobSuspendState, timeout, interval).WithArguments(js, "replicated-job-a-0", true).Should(gomega.Equal(true))
+					},
+				},
+				// Ensure the JobSet itself is updated.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("checking ReplicatedJobStatus")
 						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
-							{
-								Name:      "replicated-job-a",
-								Suspended: 1,
-							},
 							{
 								Name:      "replicated-job-b",
 								Succeeded: 1,
+								Suspended: 2,
+							},
+							{
+								Name:      "replicated-job-a",
+								Suspended: 1,
 							},
 						})
 					},

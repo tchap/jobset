@@ -176,7 +176,7 @@ var _ = ginkgo.Describe("JobSet", func() {
 		})
 	})
 
-	ginkgo.When("jobCleanupStrategy is set to Suspend", func() {
+	ginkgo.When("job cleanup strategy is set to Suspend", func() {
 		ginkgo.It("should suspend active pods when a JobSet is finished", func() {
 			ctx := context.Background()
 

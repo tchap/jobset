@@ -39,14 +39,6 @@ var (
 			Help:      `The total number of completed JobSets`,
 		}, []string{"jobset_name", "namespace"},
 	)
-
-	TerminatedTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Subsystem: constants.JobSetSubsystemName,
-			Name:      "terminated_total",
-			Help:      `The total number of terminated JobSets`,
-		}, []string{"jobset_name", "namespace"},
-	)
 )
 
 // JobSetFailed records the failed case
@@ -61,16 +53,9 @@ func JobSetCompleted(name, namespace string) {
 	CompletedTotal.WithLabelValues(name, namespace).Inc()
 }
 
-// JobSetTerminated records the terminated case
-// label values: name, namespace
-func JobSetTerminated(name, namespace string) {
-	TerminatedTotal.WithLabelValues(name, namespace).Inc()
-}
-
 func Register() {
 	metrics.Registry.MustRegister(
 		FailedTotal,
 		CompletedTotal,
-		TerminatedTotal,
 	)
 }

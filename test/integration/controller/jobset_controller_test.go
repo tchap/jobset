@@ -1298,7 +1298,7 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
 							{
 								Name:      "replicated-job-b",
-								Succeeded: 1,
+								Failed:    1,
 								Suspended: 2,
 							},
 							{

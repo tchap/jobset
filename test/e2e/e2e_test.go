@@ -176,15 +176,18 @@ var _ = ginkgo.Describe("JobSet", func() {
 		})
 	})
 
-	ginkgo.When("jobCleanupStrategy set to Suspend", func() {
+	ginkgo.When("jobCleanupStrategy is set to Suspend", func() {
 		ginkgo.It("should suspend active pods when a JobSet is finished", func() {
 			ctx := context.Background()
 
 			// Create JobSet.
-			ginkgo.By("Create JobSet")
+			ginkgo.By("Create a JobSet with jobCleanupStrategy: Suspend")
 			js := testing.MakeJobSet("js", ns.Name).
-				ReplicatedJob(testing.MakeReplicatedJob("rj").
+				ReplicatedJob(testing.MakeReplicatedJob("sleep0").
 					Job(sleepJob("sleep0", ns.Name, 0)).
+					Replicas(1).
+					Obj()).
+				ReplicatedJob(testing.MakeReplicatedJob("sleep100").
 					Job(sleepJob("sleep100", ns.Name, 100)).
 					Replicas(1).
 					Obj()).
@@ -202,10 +205,10 @@ var _ = ginkgo.Describe("JobSet", func() {
 
 			// Check the remaining active job.
 			ginkgo.By("Ensure the remaining active job is suspended")
-			jobKey := types.NamespacedName{Name: "js-rj-1", Namespace: js.Namespace}
+			jobKey := types.NamespacedName{Name: "js-sleep100-0", Namespace: js.Namespace}
 			var job batchv1.Job
 			gomega.Expect(k8sClient.Get(ctx, jobKey, &job)).To(gomega.Succeed())
-			gomega.Expect(job.Spec.Suspend).To(gomega.BeTrue())
+			gomega.Expect(ptr.Deref(job.Spec.Suspend, false)).To(gomega.BeTrue())
 		})
 	})
 

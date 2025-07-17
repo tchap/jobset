@@ -1272,9 +1272,9 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 			makeJobSet: func(ns *corev1.Namespace) *testing.JobSetWrapper {
 				return testJobSet(ns).
 					SuccessPolicy(&jobset.SuccessPolicy{
-						Operator:             jobset.OperatorAny,
-						TargetReplicatedJobs: []string{}, // applies to all replicatedJobs
-					})
+						Operator: jobset.OperatorAny,
+					}).
+					JobCleanupStrategy(jobset.JobCleanupStrategySuspend)
 			},
 			steps: []*step{
 				// Complete a job, and ensure JobSet completes based on 'any' success policy.

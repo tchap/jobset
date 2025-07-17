@@ -212,6 +212,16 @@ var _ = ginkgo.Describe("JobSet", func() {
 		})
 	})
 
+	ginkgo.When("job cleanup strategy is set to and unknow value", func() {
+		ginkgo.It("should prevent JobSet from being admitted", func() {
+			ctx := context.Background()
+			js := sleepTestJobSet(ns, 1).
+				JobCleanupStrategy("Unknown-12345").
+				Obj()
+			gomega.Expect(k8sClient.Create(ctx, js)).ShouldNot(gomega.Succeed())
+		})
+	})
+
 	// This test is added to test the JobSet transitions as Kueue would when:
 	// doing: resume in ResourceFlavor1 -> suspend -> resume in ResourceFlavor2.
 	// In particular, Kueue updates the PodTemplate on suspending and resuming

@@ -1219,7 +1219,14 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 				// Ensure remaining active jobs are suspended.
 				{
 					checkJobSetState: func(js *jobset.JobSet) {
-						ginkgo.By("Check ReplicatedJobStatus")
+						ginkgo.By("checking the remaining job is suspended")
+						gomega.Eventually(matchJobSuspendState, timeout, interval).WithArguments(js, "replicated-job-a-0", true).Should(gomega.Equal(true))
+					},
+				},
+				// Ensure the JobSet itself is updated.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("checking ReplicatedJobStatus")
 						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
 							{
 								Name:      "replicated-job-a",
@@ -2729,6 +2736,15 @@ func matchJobsSuspendState(js *jobset.JobSet, suspend bool) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func matchJobSuspendState(js *jobset.JobSet, replicatedJobName string, suspend bool) (bool, error) {
+	var job batchv1.Job
+	jobKey := types.NamespacedName{Namespace: js.Namespace, Name: js.Name + "-" + replicatedJobName}
+	if err := k8sClient.Get(ctx, jobKey, &job); err != nil {
+		return false, err
+	}
+	return ptr.Deref(job.Spec.Suspend, false) == suspend, nil
 }
 
 func checkPodTemplateUpdates(js *jobset.JobSet, podTemplateUpdates *updatePodTemplateOpts) (bool, error) {

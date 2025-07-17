@@ -116,6 +116,12 @@ func (j *JobSetWrapper) ReplicatedJob(job jobset.ReplicatedJob) *JobSetWrapper {
 	return j
 }
 
+// JobCleanupStrategy sets the job cleanup strategy for the JobSet.
+func (j *JobSetWrapper) JobCleanupStrategy(strategy jobset.JobCleanupStrategy) *JobSetWrapper {
+	j.Spec.JobCleanupStrategy = ptr.To(strategy)
+	return j
+}
+
 // Suspend adds a suspend flag to JobSet
 func (j *JobSetWrapper) Suspend(suspend bool) *JobSetWrapper {
 	j.Spec.Suspend = ptr.To(suspend)

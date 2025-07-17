@@ -176,6 +176,39 @@ var _ = ginkgo.Describe("JobSet", func() {
 		})
 	})
 
+	ginkgo.When("jobCleanupStrategy set to Suspend", func() {
+		ginkgo.It("should suspend active pods when a JobSet is finished", func() {
+			ctx := context.Background()
+
+			// Create JobSet.
+			ginkgo.By("Create JobSet")
+			js := testing.MakeJobSet("js", ns.Name).
+				ReplicatedJob(testing.MakeReplicatedJob("rj").
+					Job(sleepJob("sleep0", ns.Name, 0)).
+					Job(sleepJob("sleep100", ns.Name, 100)).
+					Replicas(1).
+					Obj()).
+				SuccessPolicy(&jobset.SuccessPolicy{
+					Operator: jobset.OperatorAny,
+				}).
+				JobCleanupStrategy(jobset.JobCleanupStrategySuspend).
+				Obj()
+
+			gomega.Expect(k8sClient.Create(ctx, js)).Should(gomega.Succeed())
+
+			// Wait for it to complete.
+			ginkgo.By("Wait for the JobSet to complete")
+			util.JobSetCompleted(ctx, k8sClient, js, timeout)
+
+			// Check the remaining active job.
+			ginkgo.By("Ensure the remaining active job is suspended")
+			jobKey := types.NamespacedName{Name: "js-rj-1", Namespace: js.Namespace}
+			var job batchv1.Job
+			gomega.Expect(k8sClient.Get(ctx, jobKey, &job)).To(gomega.Succeed())
+			gomega.Expect(job.Spec.Suspend).To(gomega.BeTrue())
+		})
+	})
+
 	// This test is added to test the JobSet transitions as Kueue would when:
 	// doing: resume in ResourceFlavor1 -> suspend -> resume in ResourceFlavor2.
 	// In particular, Kueue updates the PodTemplate on suspending and resuming
@@ -692,20 +725,24 @@ func sleepTestJobSet(ns *corev1.Namespace, durationSeconds int32) *testing.JobSe
 	replicas := 4
 	return testing.MakeJobSet(jsName, ns.Name).
 		ReplicatedJob(testing.MakeReplicatedJob(rjobName).
-			Job(testing.MakeJobTemplate("job", ns.Name).
-				PodSpec(corev1.PodSpec{
-					RestartPolicy: "Never",
-					Containers: []corev1.Container{
-						{
-							Name:    "sleep-test-container",
-							Image:   "bash:latest",
-							Command: []string{"bash", "-c"},
-							Args:    []string{fmt.Sprintf("sleep %d", durationSeconds)},
-						},
-					},
-				}).Obj()).
+			Job(sleepJob("job", ns.Name, durationSeconds)).
 			Replicas(int32(replicas)).
 			Obj())
+}
+
+func sleepJob(name string, namespace string, durationSeconds int32) batchv1.JobTemplateSpec {
+	return testing.MakeJobTemplate(name, namespace).
+		PodSpec(corev1.PodSpec{
+			RestartPolicy: "Never",
+			Containers: []corev1.Container{
+				{
+					Name:    "sleep-test-container",
+					Image:   "bash:latest",
+					Command: []string{"bash", "-c"},
+					Args:    []string{fmt.Sprintf("sleep %d", durationSeconds)},
+				},
+			},
+		}).Obj()
 }
 
 func dependsOnTestJobSet(ns *corev1.Namespace, rJobs []jobset.ReplicatedJob) *jobset.JobSet {

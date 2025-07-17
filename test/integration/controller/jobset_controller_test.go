@@ -1200,6 +1200,40 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 				},
 			},
 		}),
+		ginkgo.Entry("active jobs are suspended after jobset succeeds when job cleanup strategy is Suspend", &testCase{
+			makeJobSet: func(ns *corev1.Namespace) *testing.JobSetWrapper {
+				return testJobSet(ns).
+					SuccessPolicy(&jobset.SuccessPolicy{
+						Operator:             jobset.OperatorAny,
+						TargetReplicatedJobs: []string{}, // applies to all replicatedJobs
+					})
+			},
+			steps: []*step{
+				// Complete a job, and ensure JobSet completes based on 'any' success policy.
+				{
+					jobUpdateFn: func(jobList *batchv1.JobList) {
+						completeJob(&jobList.Items[1])
+					},
+					checkJobSetCondition: testutil.JobSetCompleted,
+				},
+				// Ensure remaining active jobs are suspended.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("Check ReplicatedJobStatus")
+						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
+							{
+								Name:      "replicated-job-a",
+								Suspended: 1,
+							},
+							{
+								Name:      "replicated-job-b",
+								Succeeded: 1,
+							},
+						})
+					},
+				},
+			},
+		}),
 		ginkgo.Entry("active jobs are deleted after jobset fails", &testCase{
 			makeJobSet: testJobSet,
 			steps: []*step{
@@ -1222,6 +1256,40 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 				{
 					checkJobSetState: func(js *jobset.JobSet) {
 						checkNoActiveJobs(js, 1)
+					},
+				},
+			},
+		}),
+		ginkgo.Entry("active jobs are suspended after jobset fails when job cleanup strategy is Suspend", &testCase{
+			makeJobSet: func(ns *corev1.Namespace) *testing.JobSetWrapper {
+				return testJobSet(ns).
+					SuccessPolicy(&jobset.SuccessPolicy{
+						Operator:             jobset.OperatorAny,
+						TargetReplicatedJobs: []string{}, // applies to all replicatedJobs
+					})
+			},
+			steps: []*step{
+				// Complete a job, and ensure JobSet completes based on 'any' success policy.
+				{
+					jobUpdateFn: func(jobList *batchv1.JobList) {
+						failJob(&jobList.Items[1])
+					},
+					checkJobSetCondition: testutil.JobSetFailed,
+				},
+				// Ensure remaining active jobs are suspended.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("Check ReplicatedJobStatus")
+						matchJobSetReplicatedStatus(js, []jobset.ReplicatedJobStatus{
+							{
+								Name:      "replicated-job-a",
+								Suspended: 1,
+							},
+							{
+								Name:      "replicated-job-b",
+								Succeeded: 1,
+							},
+						})
 					},
 				},
 			},

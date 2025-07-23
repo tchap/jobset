@@ -697,6 +697,7 @@ func constructJob(js *jobset.JobSet, rjob *jobset.ReplicatedJob, jobIdx int) *ba
 			Annotations: maps.Clone(rjob.Template.Annotations),
 			Name:        placement.GenJobName(js.Name, rjob.Name, jobIdx),
 			Namespace:   js.Namespace,
+			Finalizers:  []string{jobset.JobSetFinalizer},
 		},
 		Spec: *rjob.Template.Spec.DeepCopy(),
 	}

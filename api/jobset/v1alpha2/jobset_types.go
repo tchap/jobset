@@ -74,6 +74,9 @@ const (
 	// If a ReplicatedJob is part of a group, then its child jobs and pods have this
 	// label/annotation ranging from 0 to annotations[GroupReplicasKey] - 1
 	JobGroupIndexKey string = "jobset.sigs.k8s.io/job-group-index"
+
+	// JobSetFinalizer is the finalizer string being used by the JobSet controller.
+	JobSetFinalizer = "jobset.sigs.k8s.io/finalizer"
 )
 
 type JobSetConditionType string

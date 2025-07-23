@@ -358,6 +358,15 @@ func (j *JobWrapper) JobAnnotations(annotations map[string]string) *JobWrapper {
 	return j
 }
 
+// JobFinalizers merges the given finalizers to the existing Job finalizers.
+func (j *JobWrapper) JobFinalizers(finalizers ...string) *JobWrapper {
+	if j.Finalizers == nil {
+		j.Finalizers = append([]string(nil), finalizers...)
+	}
+	j.Finalizers = collections.MergeSlices(j.Finalizers, finalizers)
+	return j
+}
+
 // PodLabels merges the given labels to the existing Pod labels.
 // Duplicate keys will be overwritten by the new annotations (given in the function
 // parameter).

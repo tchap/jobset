@@ -1460,6 +1460,7 @@ func makeJob(args *makeJobArgs) *testutils.JobWrapper {
 		JobLabels(args.jobLabels).
 		JobAnnotations(annotations).
 		JobAnnotations(args.jobAnnotations).
+		JobFinalizers(jobset.JobSetFinalizer).
 		PodLabels(labels).
 		PodLabels(args.podLabels).
 		PodAnnotations(args.podAnnotations).

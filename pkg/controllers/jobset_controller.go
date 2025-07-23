@@ -40,6 +40,7 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	"sigs.k8s.io/jobset/pkg/constants"
@@ -157,6 +158,12 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	// Calculate JobsReady and update statuses for each ReplicatedJob.
 	rjobStatuses := r.calculateReplicatedJobStatuses(ctx, js, ownedJobs)
 	updateReplicatedJobsStatuses(js, rjobStatuses, updateStatusOpts)
+
+	// Remove finalizers for finished child jobs since the status is now reconciled.
+	if err := r.removeJobFinalizers(ctx, append(ownedJobs.successful, ownedJobs.failed...)); err != nil {
+		log.Error(err, "removing finished job finalizers")
+		return ctrl.Result{}, err
+	}
 
 	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
@@ -387,6 +394,40 @@ func (r *JobSetReconciler) calculateReplicatedJobStatuses(ctx context.Context, j
 	return rjStatus
 }
 
+// removeJobFinalizers removes finalizers for the given jobs.
+func (r *JobSetReconciler) removeJobFinalizers(ctx context.Context, jobs []*batchv1.Job) error {
+	// Make this more efficient by dropping jobs not having the finalizer.
+	jobsForUpdate := make([]*batchv1.Job, 0, len(jobs))
+	for _, job := range jobs {
+		if controllerutil.ContainsFinalizer(job, jobset.JobSetFinalizer) {
+			jobsForUpdate = append(jobsForUpdate, job)
+		}
+	}
+
+	var lock sync.Mutex
+	var finalErrs []error
+	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobs), func(i int) {
+		if err := r.removeJobFinalizer(ctx, jobsForUpdate[i]); err != nil {
+			lock.Lock()
+			defer lock.Unlock()
+			finalErrs = append(finalErrs, err)
+		}
+	})
+	return errors.Join(finalErrs...)
+}
+
+func (r *JobSetReconciler) removeJobFinalizer(ctx context.Context, job *batchv1.Job) error {
+	if !controllerutil.RemoveFinalizer(job, jobset.JobSetFinalizer) {
+		return nil
+	}
+
+	if err := r.Update(ctx, job); err != nil {
+		return err
+	}
+	ctrl.LoggerFrom(ctx).V(2).Info("job finalizer removed", "job", klog.KObj(job))
+	return nil
+}
+
 func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
 	for _, job := range activeJobs {
 		if !jobSuspended(job) {
@@ -591,17 +632,28 @@ func (r *JobSetReconciler) deleteJobs(ctx context.Context, jobsForDeletion []*ba
 	var finalErrs []error
 	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobsForDeletion), func(i int) {
 		targetJob := jobsForDeletion[i]
+
+		// Remove the finalizer.
+		if err := r.removeJobFinalizer(ctx, targetJob); err != nil {
+			log.Error(err, "failed to remove job finalizer", "job", klog.KObj(targetJob))
+			lock.Lock()
+			defer lock.Unlock()
+			finalErrs = append(finalErrs, err)
+			return
+		}
+
 		// Skip deleting jobs with deletion timestamp already set.
 		if targetJob.DeletionTimestamp != nil {
 			return
 		}
+
 		// Delete job. This deletion event will trigger another reconciliation,
 		// where the jobs are recreated.
 		foregroundPolicy := metav1.DeletePropagationForeground
 		if err := r.Delete(ctx, targetJob, &client.DeleteOptions{PropagationPolicy: &foregroundPolicy}); client.IgnoreNotFound(err) != nil {
+			log.Error(err, "failed to delete job", "job", klog.KObj(targetJob))
 			lock.Lock()
 			defer lock.Unlock()
-			log.Error(err, fmt.Sprintf("failed to delete job: %q", targetJob.Name))
 			finalErrs = append(finalErrs, err)
 			return
 		}

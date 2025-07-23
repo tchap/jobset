@@ -406,7 +406,7 @@ func (r *JobSetReconciler) removeJobFinalizers(ctx context.Context, jobs []*batc
 
 	var lock sync.Mutex
 	var finalErrs []error
-	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobs), func(i int) {
+	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobsForUpdate), func(i int) {
 		if err := r.removeJobFinalizer(ctx, jobsForUpdate[i]); err != nil {
 			lock.Lock()
 			defer lock.Unlock()

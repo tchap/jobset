@@ -752,13 +752,15 @@ func constructJob(js *jobset.JobSet, rjob *jobset.ReplicatedJob, jobIdx int) *ba
 			Annotations: maps.Clone(rjob.Template.Annotations),
 			Name:        placement.GenJobName(js.Name, rjob.Name, jobIdx),
 			Namespace:   js.Namespace,
-			Finalizers:  []string{jobset.JobSetFinalizer},
 		},
 		Spec: *rjob.Template.Spec.DeepCopy(),
 	}
 	// Label and annotate both job and pod template spec.
 	labelAndAnnotateObject(job, js, rjob, jobIdx)
 	labelAndAnnotateObject(&job.Spec.Template, js, rjob, jobIdx)
+
+	// Add the finalizer.
+	controllerutil.AddFinalizer(job, jobset.JobSetFinalizer)
 
 	// If enableDNSHostnames is set, update job spec to set subdomain as
 	// job name (a headless service with same name as job will be created later).

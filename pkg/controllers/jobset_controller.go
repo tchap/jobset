@@ -133,9 +133,18 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// Remove finalizers for relevant child jobs since the status update is now persisted.
 	if ownedJobs != nil {
-		log := ctrl.LoggerFrom(ctx)
+		// Successful and failed.
+		forUpdate := append(ownedJobs.successful, ownedJobs.failed...)
+
+		// Deleted by a 3rd party.
+		for _, job := range ownedJobs.active {
+			if job.DeletionTimestamp != nil {
+				forUpdate = append(forUpdate, job)
+			}
+		}
+
 		if err := r.removeJobFinalizers(ctx, append(ownedJobs.successful, ownedJobs.failed...)); err != nil {
-			log.Error(err, "removing finished job finalizers")
+			ctrl.LoggerFrom(ctx).Error(err, "removing finished job finalizers")
 			return ctrl.Result{}, err
 		}
 	}

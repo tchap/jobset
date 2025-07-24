@@ -143,7 +143,7 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			}
 		}
 
-		if err := r.removeJobFinalizers(ctx, append(ownedJobs.successful, ownedJobs.failed...)); err != nil {
+		if err := r.removeJobFinalizers(ctx, forUpdate); err != nil {
 			ctrl.LoggerFrom(ctx).Error(err, "removing finished job finalizers")
 			return ctrl.Result{}, err
 		}

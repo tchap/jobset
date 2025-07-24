@@ -128,7 +128,7 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 
 	// At the end of this Reconcile attempt, do one API call to persist all the JobSet status changes.
 	if err := r.updateJobSetStatus(ctx, &js, &updateStatusOpts); apierrors.IsConflict(err) {
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: 1}, nil
 	}
 
 	// Remove finalizers for relevant child jobs since the status update is now persisted.
@@ -144,6 +144,9 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		if err := r.removeJobFinalizers(ctx, forUpdate); err != nil {
+			if apierrors.IsConflict(err) {
+				return ctrl.Result{RequeueAfter: 1}, nil
+			}
 			ctrl.LoggerFrom(ctx).Error(err, "removing finished job finalizers")
 			return ctrl.Result{}, err
 		}

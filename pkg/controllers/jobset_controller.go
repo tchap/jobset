@@ -121,20 +121,29 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	updateStatusOpts := statusUpdateOpts{}
 
 	// Reconcile the JobSet.
-	result, err := r.reconcile(ctx, &js, &updateStatusOpts)
+	result, ownedJobs, err := r.reconcile(ctx, &js, &updateStatusOpts)
 	if err != nil {
 		return result, err
 	}
 
+	// At the end of this Reconcile attempt, do one API call to persist all the JobSet status changes.
 	if err := r.updateJobSetStatus(ctx, &js, &updateStatusOpts); apierrors.IsConflict(err) {
 		return ctrl.Result{Requeue: true}, nil
 	}
-	// At the end of this Reconcile attempt, do one API call to persist all the JobSet status changes.
+
+	// Remove finalizers for relevant child jobs since the status update is now persisted.
+	if ownedJobs != nil {
+		log := ctrl.LoggerFrom(ctx)
+		if err := r.removeJobFinalizers(ctx, append(ownedJobs.successful, ownedJobs.failed...)); err != nil {
+			log.Error(err, "removing finished job finalizers")
+			return ctrl.Result{}, err
+		}
+	}
 	return ctrl.Result{RequeueAfter: result.RequeueAfter}, err
 }
 
 // reconcile is the internal method containing the core JobSet reconciliation logic.
-func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) (ctrl.Result, error) {
+func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, updateStatusOpts *statusUpdateOpts) (ctrl.Result, *childJobs, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("jobset", klog.KObj(js))
 	ctx = ctrl.LoggerInto(ctx, log)
 
@@ -143,7 +152,7 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	// for why a JobSet would not be controlled by the default JobSet controller.
 	if manager := managedByExternalController(js); manager != nil {
 		log.V(5).Info("Skipping JobSet managed by a different controller", "managed-by", manager)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, nil, nil
 	}
 
 	log.V(2).Info("Reconciling JobSet")
@@ -152,68 +161,62 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	ownedJobs, err := r.getChildJobs(ctx, js)
 	if err != nil {
 		log.Error(err, "getting jobs owned by jobset")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil, err
 	}
 
 	// Calculate JobsReady and update statuses for each ReplicatedJob.
 	rjobStatuses := r.calculateReplicatedJobStatuses(ctx, js, ownedJobs)
 	updateReplicatedJobsStatuses(js, rjobStatuses, updateStatusOpts)
 
-	// Remove finalizers for finished child jobs since the status is now reconciled.
-	if err := r.removeJobFinalizers(ctx, append(ownedJobs.successful, ownedJobs.failed...)); err != nil {
-		log.Error(err, "removing finished job finalizers")
-		return ctrl.Result{}, err
-	}
-
 	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
 		if err := r.deleteJobs(ctx, ownedJobs.active); err != nil {
 			log.Error(err, "deleting jobs")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil, err
 		}
 		requeueAfter, err := executeTTLAfterFinishedPolicy(ctx, r.Client, r.clock, js)
 		if err != nil {
 			log.Error(err, "executing ttl after finished policy")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil, err
 		}
 		if requeueAfter > 0 {
-			return ctrl.Result{RequeueAfter: requeueAfter}, nil
+			return ctrl.Result{RequeueAfter: requeueAfter}, ownedJobs, nil
 		}
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, ownedJobs, nil
 	}
 
 	// Delete all jobs from a previous restart that are marked for deletion.
 	if err := r.deleteJobs(ctx, ownedJobs.previous); err != nil {
 		log.Error(err, "deleting jobs")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil, err
 	}
 
 	// If any jobs have failed, execute the JobSet failure policy (if any).
 	if len(ownedJobs.failed) > 0 {
 		if err := executeFailurePolicy(ctx, js, ownedJobs, updateStatusOpts); err != nil {
 			log.Error(err, "executing failure policy")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil, err
 		}
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, ownedJobs, nil
 	}
 
 	// If any jobs have succeeded, execute the JobSet success policy.
 	if len(ownedJobs.successful) > 0 {
 		if completed := executeSuccessPolicy(js, ownedJobs, updateStatusOpts); completed {
-			return ctrl.Result{}, nil
+			return ctrl.Result{}, ownedJobs, nil
 		}
 	}
 
 	// If pod DNS hostnames are enabled, create a headless service for the JobSet
 	if err := r.createHeadlessSvcIfNecessary(ctx, js); err != nil {
 		log.Error(err, "creating headless service")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil, err
 	}
 
 	// If job has not failed or succeeded, reconcile the state of the replicatedJobs.
 	if err := r.reconcileReplicatedJobs(ctx, js, ownedJobs, rjobStatuses, updateStatusOpts); err != nil {
 		log.Error(err, "creating jobs")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, nil, err
 	}
 
 	// Handle suspending a jobset or resuming a suspended jobset.
@@ -221,15 +224,15 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	if jobsetSuspended {
 		if err := r.suspendJobs(ctx, js, ownedJobs.active, updateStatusOpts); err != nil {
 			log.Error(err, "suspending jobset")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil, err
 		}
 	} else {
 		if err := r.resumeJobsIfNecessary(ctx, js, ownedJobs.active, rjobStatuses, updateStatusOpts); err != nil {
 			log.Error(err, "resuming jobset")
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil, err
 		}
 	}
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, ownedJobs, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

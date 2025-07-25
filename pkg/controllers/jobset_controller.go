@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"sigs.k8s.io/jobset/pkg/util/clienterrs"
 	"slices"
 	"sort"
 	"strconv"
@@ -147,7 +148,7 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		if err := r.removeJobFinalizers(ctx, forUpdate); err != nil {
-			if onlyConflictErrors(err) {
+			if clienterrs.OnlyConflictErrors(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
 			ctrl.LoggerFrom(ctx).Error(err, "removing complete job finalizers")
@@ -186,7 +187,7 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
 		if err := r.deleteJobs(ctx, ownedJobs.active); err != nil {
-			if onlyConflictErrors(err) {
+			if clienterrs.OnlyConflictErrors(err) {
 				return ctrl.Result{Requeue: true}, nil, nil
 			}
 			log.Error(err, "deleting active jobs")
@@ -205,7 +206,7 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 
 	// Delete all jobs from a previous restart that are marked for deletion.
 	if err := r.deleteJobs(ctx, ownedJobs.previous); err != nil {
-		if onlyConflictErrors(err) {
+		if clienterrs.OnlyConflictErrors(err) {
 			return ctrl.Result{Requeue: true}, nil, nil
 		}
 		log.Error(err, "deleting previous jobs")
@@ -1238,20 +1239,4 @@ func groupReplicas(js *jobset.JobSet, groupName string) string {
 		}
 	}
 	return strconv.Itoa(currGroupReplicas)
-}
-
-func onlyConflictErrors(err error) bool {
-	if apierrors.IsConflict(err) {
-		return true
-	}
-	if ex, ok := err.(interface{ Unwrap() []error }); ok {
-		errs := ex.Unwrap()
-		for _, err := range errs {
-			if !apierrors.IsConflict(err) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
 }

@@ -649,7 +649,7 @@ func (r *JobSetReconciler) deleteJobs(ctx context.Context, jobsForDeletion []*ba
 		targetJob := jobsForDeletion[i]
 
 		// Remove the finalizer.
-		if err := r.removeJobFinalizer(ctx, targetJob); err != nil {
+		if err := r.removeJobFinalizer(ctx, targetJob); client.IgnoreNotFound(err) != nil {
 			log.Error(err, "failed to remove job finalizer", "job", klog.KObj(targetJob))
 			lock.Lock()
 			defer lock.Unlock()

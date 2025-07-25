@@ -1227,6 +1227,35 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 				},
 			},
 		}),
+		ginkgo.Entry("finalizer is removed from complete child jobs", &testCase{
+			makeJobSet: testJobSet,
+			steps: []*step{
+				// Make sure the finalizer is present for all child jobs.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("checking finalizer is present on newly created jobs", func() {
+							ensureChildJobFinalizersPresent(js)
+						})
+					},
+				},
+				// Succeed the first job and fail the second job.
+				{
+					jobUpdateFn: func(jobList *batchv1.JobList) {
+						completeJob(&jobList.Items[0])
+						failJob(&jobList.Items[1])
+					},
+					checkJobSetCondition: testutil.JobSetFailed,
+				},
+				// Make sure the finalizer is removed from the child jobs.
+				{
+					checkJobSetState: func(js *jobset.JobSet) {
+						ginkgo.By("checking finalizer is removed from complete child jobs", func() {
+							ensureCompleteJobFinalizersRemoved(js)
+						})
+					},
+				},
+			},
+		}),
 		ginkgo.Entry("jobset using generateName with enableDNSHostnames should have headless service name set to the jobset name", &testCase{
 			makeJobSet: func(ns *corev1.Namespace) *testing.JobSetWrapper {
 				return testJobSet(ns).SetGenerateName("name-prefix").EnableDNSHostnames(true)
@@ -2814,6 +2843,43 @@ func matchJobSetReplicatedStatus(js *jobset.JobSet, expectedStatus []jobset.Repl
 		sort.Slice(newJs.Status.ReplicatedJobsStatus, compareNames)
 		return newJs.Status.ReplicatedJobsStatus, nil
 	}, timeout, interval).Should(gomega.Equal(expectedStatus))
+}
+
+func ensureChildJobFinalizersPresent(js *jobset.JobSet) {
+	checkChildJobs(js, func(job *batchv1.Job) bool {
+		return controllerutil.ContainsFinalizer(job, jobset.JobSetFinalizer)
+	})
+}
+
+func ensureCompleteJobFinalizersRemoved(js *jobset.JobSet) {
+	checkChildJobs(js, func(job *batchv1.Job) bool {
+		for _, c := range job.Status.Conditions {
+			if (c.Type == batchv1.JobComplete || c.Type == batchv1.JobFailed) && c.Status == corev1.ConditionTrue {
+				if controllerutil.ContainsFinalizer(job, jobset.JobSetFinalizer) {
+					return false
+				}
+			}
+		}
+		return true
+	})
+}
+
+func checkChildJobs(js *jobset.JobSet, check func(*batchv1.Job) bool) {
+	gomega.Eventually(func() (bool, error) {
+		// Get all jobs owned by the JobSet.
+		var childJobList batchv1.JobList
+		if err := k8sClient.List(ctx, &childJobList, client.InNamespace(js.Namespace)); err != nil {
+			return false, err
+		}
+
+		// Go through all complete jobs and check the finalizer.
+		for _, job := range childJobList.Items {
+			if !check(&job) {
+				return false, nil
+			}
+		}
+		return true, nil
+	}, timeout, interval).Should(gomega.BeTrue())
 }
 
 // checkCoordinator verifies that all child Jobs of a JobSet have the label and annotation:

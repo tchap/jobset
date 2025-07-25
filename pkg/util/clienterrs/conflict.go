@@ -1,7 +1,6 @@
 package clienterrs
 
 import (
-	"fmt"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -11,7 +10,6 @@ import (
 func OnlyConflictErrors(err error) bool {
 	if ex, ok := err.(interface{ Unwrap() []error }); ok {
 		for _, err := range ex.Unwrap() {
-			fmt.Println(err)
 			if !apierrors.IsConflict(err) {
 				return false
 			}

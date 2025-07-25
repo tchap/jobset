@@ -127,8 +127,11 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	// At the end of this Reconcile attempt, do one API call to persist all the JobSet status changes.
-	if err := r.updateJobSetStatus(ctx, &js, &updateStatusOpts); apierrors.IsConflict(err) {
-		return ctrl.Result{RequeueAfter: 1}, nil
+	if err := r.updateJobSetStatus(ctx, &js, &updateStatusOpts); err != nil {
+		if apierrors.IsConflict(err) {
+			return ctrl.Result{Requeue: true}, nil
+		}
+		return ctrl.Result{}, err
 	}
 
 	// Remove finalizers for relevant child jobs since the status update is now persisted.
@@ -144,10 +147,10 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 
 		if err := r.removeJobFinalizers(ctx, forUpdate); err != nil {
-			if apierrors.IsConflict(err) {
-				return ctrl.Result{RequeueAfter: 1}, nil
+			if onlyConflictErrors(err) {
+				return ctrl.Result{Requeue: true}, nil
 			}
-			ctrl.LoggerFrom(ctx).Error(err, "removing finished job finalizers")
+			ctrl.LoggerFrom(ctx).Error(err, "removing complete job finalizers")
 			return ctrl.Result{}, err
 		}
 	}
@@ -183,7 +186,10 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 	// If JobSet is already completed or failed, clean up active child jobs and requeue if TTLSecondsAfterFinished is set.
 	if jobSetFinished(js) {
 		if err := r.deleteJobs(ctx, ownedJobs.active); err != nil {
-			log.Error(err, "deleting jobs")
+			if onlyConflictErrors(err) {
+				return ctrl.Result{Requeue: true}, nil, nil
+			}
+			log.Error(err, "deleting active jobs")
 			return ctrl.Result{}, nil, err
 		}
 		requeueAfter, err := executeTTLAfterFinishedPolicy(ctx, r.Client, r.clock, js)
@@ -199,7 +205,10 @@ func (r *JobSetReconciler) reconcile(ctx context.Context, js *jobset.JobSet, upd
 
 	// Delete all jobs from a previous restart that are marked for deletion.
 	if err := r.deleteJobs(ctx, ownedJobs.previous); err != nil {
-		log.Error(err, "deleting jobs")
+		if onlyConflictErrors(err) {
+			return ctrl.Result{Requeue: true}, nil, nil
+		}
+		log.Error(err, "deleting previous jobs")
 		return ctrl.Result{}, nil, err
 	}
 
@@ -409,40 +418,6 @@ func (r *JobSetReconciler) calculateReplicatedJobStatuses(ctx context.Context, j
 	return rjStatus
 }
 
-// removeJobFinalizers removes finalizers for the given jobs.
-func (r *JobSetReconciler) removeJobFinalizers(ctx context.Context, jobs []*batchv1.Job) error {
-	// Make this more efficient by dropping jobs not having the finalizer.
-	jobsForUpdate := make([]*batchv1.Job, 0, len(jobs))
-	for _, job := range jobs {
-		if controllerutil.ContainsFinalizer(job, jobset.JobSetFinalizer) {
-			jobsForUpdate = append(jobsForUpdate, job)
-		}
-	}
-
-	var lock sync.Mutex
-	var finalErrs []error
-	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobsForUpdate), func(i int) {
-		if err := r.removeJobFinalizer(ctx, jobsForUpdate[i]); err != nil {
-			lock.Lock()
-			defer lock.Unlock()
-			finalErrs = append(finalErrs, err)
-		}
-	})
-	return errors.Join(finalErrs...)
-}
-
-func (r *JobSetReconciler) removeJobFinalizer(ctx context.Context, job *batchv1.Job) error {
-	if !controllerutil.RemoveFinalizer(job, jobset.JobSetFinalizer) {
-		return nil
-	}
-
-	if err := r.Update(ctx, job); err != nil {
-		return err
-	}
-	ctrl.LoggerFrom(ctx).V(2).Info("job finalizer removed", "job", klog.KObj(job))
-	return nil
-}
-
 func (r *JobSetReconciler) suspendJobs(ctx context.Context, js *jobset.JobSet, activeJobs []*batchv1.Job, updateStatusOpts *statusUpdateOpts) error {
 	for _, job := range activeJobs {
 		if !jobSuspended(job) {
@@ -641,16 +616,57 @@ func (r *JobSetReconciler) createJobs(ctx context.Context, js *jobset.JobSet, jo
 	return allErrs
 }
 
+// removeJobFinalizers removes finalizers for the given jobs.
+func (r *JobSetReconciler) removeJobFinalizers(ctx context.Context, jobs []*batchv1.Job) error {
+	// Make this more efficient by dropping jobs not having the finalizer.
+	jobsForUpdate := make([]*batchv1.Job, 0, len(jobs))
+	for _, job := range jobs {
+		if controllerutil.ContainsFinalizer(job, jobset.JobSetFinalizer) {
+			jobsForUpdate = append(jobsForUpdate, job)
+		}
+	}
+
+	log := ctrl.LoggerFrom(ctx)
+	var lock sync.Mutex
+	var finalErrs []error
+	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobsForUpdate), func(i int) {
+		targetJob := jobsForUpdate[i]
+		if err := r.removeJobFinalizer(ctx, targetJob); client.IgnoreNotFound(err) != nil {
+			if !apierrors.IsConflict(err) {
+				log.Error(err, "failed to remove job finalizer", "job", klog.KObj(targetJob))
+			}
+			lock.Lock()
+			defer lock.Unlock()
+			finalErrs = append(finalErrs, err)
+		}
+	})
+	return errors.Join(finalErrs...)
+}
+
+func (r *JobSetReconciler) removeJobFinalizer(ctx context.Context, job *batchv1.Job) error {
+	if !controllerutil.RemoveFinalizer(job, jobset.JobSetFinalizer) {
+		return nil
+	}
+
+	if err := r.Update(ctx, job); err != nil {
+		return err
+	}
+	ctrl.LoggerFrom(ctx).V(2).Info("job finalizer removed", "job", klog.KObj(job))
+	return nil
+}
+
 func (r *JobSetReconciler) deleteJobs(ctx context.Context, jobsForDeletion []*batchv1.Job) error {
 	log := ctrl.LoggerFrom(ctx)
-	lock := &sync.Mutex{}
+	var lock sync.Mutex
 	var finalErrs []error
 	workqueue.ParallelizeUntil(ctx, constants.MaxParallelism, len(jobsForDeletion), func(i int) {
 		targetJob := jobsForDeletion[i]
 
 		// Remove the finalizer.
 		if err := r.removeJobFinalizer(ctx, targetJob); client.IgnoreNotFound(err) != nil {
-			log.Error(err, "failed to remove job finalizer", "job", klog.KObj(targetJob))
+			if !apierrors.IsConflict(err) {
+				log.Error(err, "failed to remove job finalizer", "job", klog.KObj(targetJob))
+			}
 			lock.Lock()
 			defer lock.Unlock()
 			finalErrs = append(finalErrs, err)
@@ -1222,4 +1238,20 @@ func groupReplicas(js *jobset.JobSet, groupName string) string {
 		}
 	}
 	return strconv.Itoa(currGroupReplicas)
+}
+
+func onlyConflictErrors(err error) bool {
+	if apierrors.IsConflict(err) {
+		return true
+	}
+	if ex, ok := err.(interface{ Unwrap() []error }); ok {
+		errs := ex.Unwrap()
+		for _, err := range errs {
+			if !apierrors.IsConflict(err) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }

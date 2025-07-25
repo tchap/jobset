@@ -114,6 +114,7 @@ func (r *JobSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	}
 
 	// Don't reconcile JobSets marked for deletion.
+	// XXX: Remove finalizers from child jobs?
 	if jobSetMarkedForDeletion(&js) {
 		return ctrl.Result{}, nil
 	}

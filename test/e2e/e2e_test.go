@@ -24,14 +24,10 @@ import (
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/cli-runtime/pkg/printers"
 	batchv1ac "k8s.io/client-go/applyconfigurations/batch/v1"
 	corev1ac "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/utils/ptr"
@@ -48,60 +44,16 @@ func shouldDumpNamespace() bool {
 }
 
 var _ = ginkgo.Describe("JobSet", func() {
-
-	// Each test runs in a separate namespace.
-	var ns *corev1.Namespace
-
+	var (
+		testRun *util.TestRun
+		ns      *corev1.Namespace
+	)
 	ginkgo.BeforeEach(func() {
-		// Create test namespace before each test.
-		ns = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "e2e-",
-			},
-		}
-		gomega.Expect(k8sClient.Create(ctx, ns)).To(gomega.Succeed())
-
-		// Wait for namespace to exist before proceeding with test.
-		gomega.Eventually(func() error {
-			err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ns.Namespace, Name: ns.Name}, ns)
-			if err != nil {
-				return err
-			}
-			return nil
-		}, timeout, interval).Should(gomega.Succeed())
+		testRun = util.NewTestRun(ctx, k8sClient, "e2e-", util.DumpNamespace(shouldDumpNamespace()))
+		ns = testRun.Namespace
 	})
-
 	ginkgo.AfterEach(func() {
-		// Dump the namespace content, optionally.
-		// This is only visible on failure since ginkgo.GinkgoWriter is being used.
-		if shouldDumpNamespace() {
-			var printer printers.YAMLPrinter
-
-			fmt.Fprintf(ginkgo.GinkgoWriter, "\nDumping relevant resources in namespace %s:\n\n", ns.Name)
-
-			// JobSets
-			var jobsets jobset.JobSetList
-			gomega.Expect(k8sClient.List(ctx, &jobsets)).To(gomega.Succeed())
-			for _, js := range jobsets.Items {
-				gomega.Expect(printer.PrintObj(&js, ginkgo.GinkgoWriter)).To(gomega.Succeed())
-			}
-
-			// Jobs
-			var jobs batchv1.JobList
-			gomega.Expect(k8sClient.List(ctx, &jobs)).To(gomega.Succeed())
-			for _, job := range jobs.Items {
-				// GVK is not set properly for the list items.
-				job.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   batchv1.SchemeGroupVersion.Group,
-					Version: batchv1.SchemeGroupVersion.Version,
-					Kind:    "Job",
-				})
-				gomega.Expect(printer.PrintObj(&job, ginkgo.GinkgoWriter)).To(gomega.Succeed())
-			}
-		}
-
-		// Delete test namespace after each test.
-		gomega.Expect(k8sClient.Delete(ctx, ns)).To(gomega.Succeed())
+		testRun.AfterEach()
 	})
 
 	ginkgo.When("dns hostnames is enabled", func() {

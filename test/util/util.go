@@ -36,7 +36,10 @@ import (
 	"sigs.k8s.io/jobset/pkg/constants"
 )
 
-const interval = time.Millisecond * 250
+const (
+	timeout  = 10 * time.Minute
+	interval = time.Millisecond * 250
+)
 
 func NumExpectedJobs(js *jobset.JobSet) int {
 	expectedJobs := 0

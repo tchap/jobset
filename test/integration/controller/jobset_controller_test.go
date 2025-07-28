@@ -46,74 +46,25 @@ const (
 	interval = time.Millisecond * 250
 )
 
-var _ = ginkgo.Describe("JobSet validation", func() {
-	// jobSetUpdate contains the mutations to perform on the jobset and the
-	// checks to perform afterwards.
-	type jobSetUpdate struct {
-		fn func(*jobset.JobSet)
-	}
+var _ = ginkgo.Describe("Updating a JobSet", func() {
+	var testRun *testutil.TestRun
+	ginkgo.BeforeEach(func() {
+		testRun = testutil.NewTestRun(ctx, k8sClient, "integration-")
+	})
+	ginkgo.AfterEach(func() {
+		testRun.AfterEach()
+	})
 
-	type testCase struct {
-		makeJobSet func(*corev1.Namespace) *testing.JobSetWrapper
-		updates    []*jobSetUpdate
-	}
+	ginkgo.When("setting the suspend flag", func() {
+		ginkgo.It("should succeed", func() {
+			js := testJobSet(testRun.Namespace).Obj()
+			testutil.CreateJobSet(ctx, k8sClient, js)
 
-	ginkgo.DescribeTable("JobSet validation during creation and updates",
-		func(tc *testCase) {
-			ctx := context.Background()
-
-			// Create test namespace for each entry.
-			ns := &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "jobset-ns-",
-				},
-			}
-
-			gomega.Expect(k8sClient.Create(ctx, ns)).To(gomega.Succeed())
-
-			defer func() {
-				gomega.Expect(testutil.DeleteNamespace(ctx, k8sClient, ns)).To(gomega.Succeed())
-			}()
-
-			// Create JobSet.
-			ginkgo.By("creating jobset")
-			js := tc.makeJobSet(ns).Obj()
-
-			// Verify jobset created successfully.
-			ginkgo.By("checking that jobset creation succeeds")
-			gomega.Eventually(func() error {
-				return k8sClient.Create(ctx, js)
-			}, timeout, interval).Should(gomega.Succeed())
-
-			// Perform updates to the jobset and verify the validation is working correctly.
-			for _, update := range tc.updates {
-
-				// Update jobset if specified.
-				if update.fn != nil {
-					// Verify a valid jobset update succeeded.
-					gomega.Eventually(func() error {
-						var jsGet jobset.JobSet
-						if err := k8sClient.Get(ctx, types.NamespacedName{Name: js.Name, Namespace: js.Namespace}, &jsGet); err != nil {
-							return err
-						}
-						update.fn(&jsGet)
-						return k8sClient.Update(ctx, &jsGet)
-					}, timeout, interval).Should(gomega.Succeed())
-				}
-			}
-		},
-		ginkgo.Entry("setting suspend is allowed", &testCase{
-			makeJobSet: testJobSet,
-			updates: []*jobSetUpdate{
-				{
-					fn: func(js *jobset.JobSet) {
-						js.Spec.Suspend = ptr.To(true)
-					},
-				},
-			},
-		}),
-	) // end of DescribeTable
-}) // end of Describe
+			js.Spec.Suspend = ptr.To(true)
+			testutil.UpdateJobSet(ctx, k8sClient, js)
+		})
+	})
+})
 
 var _ = ginkgo.Describe("JobSet controller", func() {
 	// step contains the mutations to perform on the jobs/jobset and the

@@ -98,20 +98,16 @@ var _ = ginkgo.Describe("JobSet controller", func() {
 	ginkgo.DescribeTable("jobset is created and its jobs go through a series of updates",
 		func(tc *testCase) {
 			ctx := context.Background()
-			// Create test namespace for each entry.
-			ns := &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "jobset-ns-",
-				},
-			}
-			gomega.Expect(k8sClient.Create(ctx, ns)).To(gomega.Succeed())
-
-			defer func() {
-				gomega.Expect(testutil.DeleteNamespace(ctx, k8sClient, ns)).To(gomega.Succeed())
-			}()
+			var testRun *testutil.TestRun
+			ginkgo.BeforeEach(func() {
+				testRun = testutil.NewTestRun(ctx, k8sClient, "integration-")
+			})
+			ginkgo.AfterEach(func() {
+				testRun.AfterEach()
+			})
 
 			// Create JobSet.
-			js := tc.makeJobSet(ns).Obj()
+			js := tc.makeJobSet(testRun.Namespace).Obj()
 
 			// Verify jobset created successfully.
 			ginkgo.By(fmt.Sprintf("creating jobSet %s/%s", js.Name, js.Namespace))

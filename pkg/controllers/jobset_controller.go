@@ -20,12 +20,15 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"reflect"
 	"slices"
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 
 	"k8s.io/utils/clock"
+	"k8s.io/utils/lru"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -48,6 +51,11 @@ import (
 	"sigs.k8s.io/jobset/pkg/util/placement"
 )
 
+const (
+	eventTimestampCacheSize = 10000
+	eventThrottlePeriod     = 3 * time.Minute
+)
+
 var apiGVStr = jobset.GroupVersion.String()
 
 // JobSetReconciler reconciles a JobSet object
@@ -56,6 +64,9 @@ type JobSetReconciler struct {
 	Scheme *runtime.Scheme
 	Record record.EventRecorder
 	clock  clock.Clock
+
+	eventTimestamps    *lru.Cache
+	eventTimestampLock sync.Mutex
 }
 
 type childJobs struct {
@@ -90,7 +101,7 @@ type eventParams struct {
 }
 
 func NewJobSetReconciler(client client.Client, scheme *runtime.Scheme, record record.EventRecorder) *JobSetReconciler {
-	return &JobSetReconciler{Client: client, Scheme: scheme, Record: record, clock: clock.RealClock{}}
+	return &JobSetReconciler{Client: client, Scheme: scheme, Record: record, clock: clock.RealClock{}, eventTimestamps: lru.New(eventTimestampCacheSize)}
 }
 
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;watch;update;patch
@@ -537,7 +548,7 @@ func (r *JobSetReconciler) reconcileReplicatedJobs(ctx context.Context, js *jobs
 		// Create jobs as necessary.
 		if err := r.createJobs(ctx, js, jobs); err != nil {
 			log.Error(err, "creating jobs")
-			r.Record.Eventf(js, corev1.EventTypeWarning, constants.JobCreationFailedReason, err.Error())
+			r.recordJobCreationFailed(js, err)
 			return err
 		}
 
@@ -555,6 +566,35 @@ func (r *JobSetReconciler) reconcileReplicatedJobs(ctx context.Context, js *jobs
 		setInOrderStartupPolicyCompletedCondition(js, updateStatusOpts)
 	}
 	return nil
+}
+
+func (r *JobSetReconciler) recordJobCreationFailed(js *jobset.JobSet, err error) {
+	key := types.NamespacedName{Namespace: js.GetNamespace(), Name: js.GetName()}.String()
+	r.recordThrottledEvent(key, js, js.Spec.ReplicatedJobs, corev1.EventTypeWarning, constants.JobCreationFailedReason, err.Error())
+}
+
+type lastEventCacheRecord struct {
+	Timestamp time.Time
+	Opaque    any
+}
+
+func (r *JobSetReconciler) recordThrottledEvent(eventKey string, object runtime.Object, opaque any, eventType, reason, messageFmt string, args ...interface{}) {
+	r.eventTimestampLock.Lock()
+	v, ok := r.eventTimestamps.Get(eventKey)
+	r.eventTimestamps.Add(eventKey, lastEventCacheRecord{
+		Timestamp: r.clock.Now(),
+		Opaque:    opaque,
+	})
+	r.eventTimestampLock.Unlock()
+
+	if ok {
+		record := v.(lastEventCacheRecord)
+		if time.Since(record.Timestamp) < eventThrottlePeriod && reflect.DeepEqual(record.Opaque, opaque) {
+			return
+		}
+	}
+
+	r.Record.Eventf(object, eventType, reason, messageFmt, args...)
 }
 
 func (r *JobSetReconciler) createJobs(ctx context.Context, js *jobset.JobSet, jobs []*batchv1.Job) error {

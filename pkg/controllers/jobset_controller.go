@@ -52,8 +52,9 @@ import (
 )
 
 const (
-	eventTimestampCacheSize = 10000
-	eventThrottlePeriod     = 3 * time.Minute
+	eventThrottlePeriod            = 3 * time.Minute
+	eventTimestampCacheSize        = 10000
+	eventTimestampCacheResetPeriod = 5 * time.Minute
 )
 
 var apiGVStr = jobset.GroupVersion.String()
@@ -595,6 +596,27 @@ func (r *JobSetReconciler) recordThrottledEvent(eventKey string, object runtime.
 	}
 
 	r.Record.Eventf(object, eventType, reason, messageFmt, args...)
+}
+
+func (r *JobSetReconciler) RunCleaner(ctx context.Context) {
+	terminatedCh := make(chan struct{})
+	go func() {
+		defer close(terminatedCh)
+		ticker := time.NewTicker(eventTimestampCacheResetPeriod)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				r.eventTimestampLock.Lock()
+				r.eventTimestamps.Clear()
+				r.eventTimestampLock.Unlock()
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	<-terminatedCh
 }
 
 func (r *JobSetReconciler) createJobs(ctx context.Context, js *jobset.JobSet, jobs []*batchv1.Job) error {

@@ -52,7 +52,7 @@ import (
 )
 
 const (
-	eventThrottlePeriod            = 3 * time.Minute
+	eventThrottlePeriod            = 1 * time.Minute
 	eventTimestampCacheSize        = 10000
 	eventTimestampCacheResetPeriod = 5 * time.Minute
 )
